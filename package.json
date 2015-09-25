@@ -1,0 +1,24 @@
+{
+  "name": "sftp-promises",
+  "version": "0.0.1",
+  "description": "SFTP Promise wrapper for ssh2 SFTP commands",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brokenbot/sftp-promises.git"
+  },
+  "keywords": [
+    "sftp",
+    "promises",
+    "ssh2"
+  ],
+  "author": "dave sanderson",
+  "license": "BSD-3-Clause",
+  "bugs": {
+    "url": "https://github.com/brokenbot/sftp-promises/issues"
+  },
+  "homepage": "https://github.com/brokenbot/sftp-promises#readme"
+}
