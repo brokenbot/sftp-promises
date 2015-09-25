@@ -19,17 +19,16 @@ module.exports = function (config) {
 
         ls: function (location) {
 			var self = this;
-			var p = new Promise(function (resolve, reject) {
+			return new Promise(function (resolve, reject) {
 				var conn = new Client();
 				conn.on('ready', function () {
-					console.log('reading %s', location);
+					//console.log('reading %s', location);
 					conn.sftp(function (err, sftp) {
 						sftp.stat(location, function(err, stat) {
 							if (err) { reject(err) };
 							var attrs = statToAttrs(stat);
 							if (stat.isDirectory()) {
 								sftp.readdir(location, function (err, list) {
-									console.log('dir stats: %s', stat)
 									if (err) { reject(err) };
 									resolve({ path: location, type: 'directory', attrs: attrs , entries: list});
 									conn.end();
@@ -44,24 +43,32 @@ module.exports = function (config) {
 				}).connect(self.config);
 				//conn.on('error', reject(err))
 			})
-			
-			return p;
 
 		},
 		
-		get: function (location) {
+		getBuffer: function(location) {
+			var self = this;
+			throw ('not yet implementd');
+		},
+		
+		putBuffer: function(buffer, location) {
 			var self = this;
 			throw ('not yet implemented');
 		},
 		
-		put: function (buffer, location) {
+		get: function (remote, local) {
+			var self = this;
+			throw ('not yet implemented');
+		},
+		
+		put: function (local, remote) {
 			var self = this;
 			throw ('not yet impletmented');
 		},
 		
 		stat: function stat(path) {
 			var self = this;
-			return p = new Promise(function (resolve, reject) {
+			return new Promise(function (resolve, reject) {
 				var conn = new Client();
 				conn.on('ready', function() {
 					console.log('stating %s', path);
