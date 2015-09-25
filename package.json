@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/brokenbot/sftp-promises/issues"
   },
-  "homepage": "https://github.com/brokenbot/sftp-promises#readme"
+  "homepage": "https://github.com/brokenbot/sftp-promises#readme",
+  "dependencies": {
+    "ssh2": "^0.4.11"
+  }
 }
