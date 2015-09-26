@@ -1,4 +1,5 @@
 var Client = require('ssh2').Client;
+var MODES = require('ssh2').SFTP_OPEN_MODE;
 // var Promise = require('bluebird');
 
 var statToAttrs = function (stats) {
@@ -70,14 +71,19 @@ module.exports = function (config) {
               }
               sftp.fstat(handle, function (err, stat) {
                 if (err) { reject(err); conn.end(); return false }
-                var buffer = Buffer(stat.size);
+                var bytes = stat.size;
+                var buffer = Buffer(bytes);
                 buffer.fill(0);
-                sftp.read(handle, buffer, 0, buffer.length, 0, function (err) {
-                  if (err) {
+                var cb = function(err, readBytes, offsetBuffer, position) {
+                  if(err) {
                     reject(err);
+                    sftp.close();
                     conn.end();
                     return false;
-                  } else {
+                  }
+                  position = position + readBytes;
+                  bytes = bytes - readBytes;
+                  if (bytes < 1) { 
                     sftp.close(handle, function (err) {
                       conn.end();
                       if (err) {
@@ -85,11 +91,14 @@ module.exports = function (config) {
                         return false;
                       } else {
                         resolve(buffer);
-                        return buffer;
+                        return;
                       }
                     })
+                  } else {
+                    sftp.read(handle, buffer, position, bytes, position, cb)
                   }
-                })
+                }
+                sftp.read(handle, buffer, 0, bytes, 0, cb)
               })
             })
           })

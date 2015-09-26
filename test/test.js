@@ -29,10 +29,12 @@ describe('stat dir and file', function(){
 
 describe('tranfer files through buffers', function(){
   it('tranfer buffer to file', function *() {
+    //this.timeout(0)  // enable for testing with large files
     var val = yield sftp.putBuffer(buffer, '/tmp/test.dat');
     val.should.be.true;
   });
   it('tranfer file to buffer', function *() {
+    //this.timeout(0)  // enable for testing with large files
     var rbuffer = yield sftp.getBuffer('/tmp/test.dat');
     rbuffer.equals(buffer).should.be.true;
   })
@@ -40,10 +42,12 @@ describe('tranfer files through buffers', function(){
 
 describe('transfer files', function(){
 	it('should transfer local file to remote', function *() {
+    this.timeout(0)
     var val = yield sftp.put('test/test.dat', '/tmp/test.dat');
     val.should.be.true;
   })
   it('should transfer remote file locally', function *(){
+    this.timeout(0)
     var val = yield sftp.get('/tmp/test.dat', '/tmp/transfertest.remove');
     val.should.be.true;
 		// clean file from local system
