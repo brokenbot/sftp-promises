@@ -11,6 +11,9 @@ var config = { host: process.env.SFTPHOST, username: process.env.SFTPUSER, passw
 
 var sftp = require('../index')(config);
 
+// read in test.dat to buffer
+var buffer = fs.readFileSync('test/test.dat');
+
 describe('stat dir and file', function(){
   it('should return a valid directroy object', function *(){
     var list = yield sftp.ls('/');
@@ -21,6 +24,17 @@ describe('stat dir and file', function(){
     var list = yield sftp.ls('./.bash_profile');
     list.should.be.an('object');
     list.type.should.equal('file');
+  })
+})
+
+describe('tranfer files through buffers', function(){
+  it('tranfer buffer to file', function *() {
+    var val = yield sftp.putBuffer(buffer, '/tmp/test.dat');
+    val.should.be.true;
+  });
+  it('tranfer file to buffer', function *() {
+    var rbuffer = yield sftp.getBuffer('/tmp/test.dat');
+    rbuffer.equals(buffer).should.be.true;
   })
 })
 

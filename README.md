@@ -16,8 +16,8 @@ Each request will create a new conneciton and close it when finished, this is by
 # Support calls
 
 * sftp.ls(\<string>remote\_path) returns a promise with an object descibing the path
-* sftp.getBuffer(\<string>remote\_path) returns a promise with a buffer containing the file contents **- not yet implemented**
-* sftp.putBuffer(\<Buffer>data, <string>remote\_path) returns a promise with a boolean, true if successful **- not yet implemented**
+* sftp.getBuffer(\<string>remote\_path) returns a promise with a buffer containing the file contents
+* sftp.putBuffer(\<Buffer>data, <string>remote\_path) returns a promise with a boolean, true if successful
 * sftp.get(\<string>remote\_path, <string>local\_path) returns a promise with a boolean, true if successful
 * sftp.put(\<string>local\_path, <string>remote\_path) returns a promise with a boolean, true if successful
 * sftp.rm(\<string>location) returns a promise with a boolean, true if successful
