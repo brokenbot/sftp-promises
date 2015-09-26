@@ -15,10 +15,11 @@ module.exports = function (config) {
 
   var sftpClient = {
 
-    config: config,
+		config: config,
 
-    ls: function (location) {
-      var self = this;
+
+		ls: function ls(location) {
+			var self = this;
       return new Promise(function (resolve, reject) {
         var conn = new Client();
         conn.on('ready', function () {
@@ -55,17 +56,17 @@ module.exports = function (config) {
 
     },
 
-    getBuffer: function (location) {
+    getBuffer: function getBuffer(location) {
       var self = this;
       throw ('not yet implementd');
     },
 
-    putBuffer: function (buffer, location) {
+    putBuffer: function putBuffer(buffer, location) {
       var self = this;
       throw ('not yet implemented');
     },
 
-    get: function (remote, local) {
+    get: function get(remote, local) {
       var self = this;
       return new Promise(function (resolve, reject) {
         var conn = new Client();
@@ -81,10 +82,14 @@ module.exports = function (config) {
             });
           });
         }).connect(self.config);
+				conn.on('error', function (err) {
+          conn.end();
+          reject(err);
+        })
       });
     },
 
-    put: function (local, remote) {
+    put: function put(local, remote) {
       var self = this;
       return new Promise(function (resolve, reject) {
         var conn = new Client();
@@ -100,10 +105,60 @@ module.exports = function (config) {
             });
           });
         }).connect(self.config);
+				conn.on('error', function (err) {
+          conn.end();
+          reject(err);
+        })
       });
     },
 
-  };
+		rm: function rm(location) {
+			var self = this;
+			return new Promise(function (resolve, reject) {
+        var conn = new Client();
+        conn.on('ready', function () {
+          conn.sftp(function (err, sftp) {
+            sftp.unlink(location, function (err) {
+              if (err) {
+                reject(err)
+              } else {
+                resolve(true)
+              }
+              conn.end();
+            });
+          });
+        }).connect(self.config);
+				conn.on('error', function (err) {
+          conn.end();
+          reject(err);
+        })
+			})
+		},
 
-  return sftpClient;
+	mv: function rm(src, dest) {
+		var self = this;
+		return new Promise(function (resolve, reject) {
+			var conn = new Client();
+			conn.on('ready', function () {
+				conn.sftp(function (err, sftp) {
+					sftp.rename(src, dest, function (err) {
+						if (err) {
+							reject(err)
+						} else {
+							resolve(true)
+						}
+						conn.end();
+					});
+				});
+			}).connect(self.config);
+			conn.on('error', function (err) {
+				conn.end();
+				reject(err);
+			})
+		})
+	}
+	
+};
+
+return sftpClient;
 };
