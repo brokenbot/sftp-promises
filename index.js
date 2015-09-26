@@ -114,7 +114,6 @@ module.exports = function (config) {
                 return;
               }
               sftp.write(handle, buffer, 0, buffer.length, 0, function (err) {
-                console.log('write finished')
                 if (err) {
                   reject(err);
                   conn.end();
