@@ -1,6 +1,4 @@
-var Client = require('ssh2').Client;
-var MODES = require('ssh2').SFTP_OPEN_MODE;
-// var Promise = require('bluebird');
+var Client = require('ssh2').Client;;
 
 var statToAttrs = function (stats) {
   var attrs = {};
@@ -13,10 +11,16 @@ var statToAttrs = function (stats) {
 }
 
 function sftpClient(config) {
+  if (!(this instanceof sftpClient)) {
+    return new sftpClient(config);
+  }
 
-  this.config = config;
+  this.config = config || {};
 
 }
+
+sftpClient.prototype.MODES = require('ssh2').SFTP_OPEN_MODE;
+sftpClient.prototype.CODES = require('ssh2').SFTP_STATUS_CODE;
 
 sftpClient.prototype.sftpCmd = function sftpCmd(cmd) {
   var self = this;
