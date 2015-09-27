@@ -1,6 +1,6 @@
 {
   "name": "sftp-promises",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "SFTP Promise wrapper for ssh2 SFTP commands",
   "main": "index.js",
   "scripts": {
