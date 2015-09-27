@@ -15,7 +15,7 @@
     "promises",
     "ssh2"
   ],
-  "author": "dave sanderson",
+  "author": "Dave Sanderson",
   "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/brokenbot/sftp-promises/issues"
