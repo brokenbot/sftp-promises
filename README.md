@@ -1,6 +1,6 @@
 # sftp-promises
 
-[![NPM version](http://img.shields.io/npm/v/sftp-promises.svg?style=flat)]
+[![NPM version](http://img.shields.io/npm/v/sftp-promises.svg?style=flat)](https://npmjs.org/package/sftp-promises)
 
 >SFTP Promise Wrapper for ssh2
 
