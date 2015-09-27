@@ -7,9 +7,16 @@ var chai = require('chai');
 chai.should();
 // var expect = chai.expect;
 
-var config = { host: process.env.SFTPHOST, username: process.env.SFTPUSER, password: process.env.SFTPPASS };
+var config = { 
+  host: process.env.SFTPHOST || 'localhost', 
+  port: process.env.SFTPPORT || 22, 
+  username: process.env.SFTPUSER, 
+  password: process.env.SFTPPASS 
+};
 
-var sftp = require('../index')(config);
+var SFTPClient = require('../index');
+
+var sftp = new SFTPClient(config);
 
 // read in test.dat to buffer
 var buffer = fs.readFileSync('test/test.dat');
