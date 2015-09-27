@@ -50,7 +50,7 @@ describe('tranfer files through buffers', function(){
 describe('transfer files', function(){
 	it('should transfer local file to remote', function *() {
     this.timeout(0)
-    var val = yield sftp.put('test/test.dat', '/tmp/test.dat');
+    var val = yield sftp.put('test/fixtures/test.dat', '/tmp/test.dat');
     val.should.be.true;
   })
   it('should transfer remote file locally', function *(){
