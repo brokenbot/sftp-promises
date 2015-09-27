@@ -1,5 +1,8 @@
 # sftp-promises
-SFTP Promise Wrapper for ssh2
+
+[![NPM version](http://img.shields.io/npm/v/sftp-promises.svg?style=flat)]
+
+>SFTP Promise Wrapper for ssh2
 
 Support basic SFTP transaction with promises, specifically for fronting SFTP with a web based API using something like Koa
 

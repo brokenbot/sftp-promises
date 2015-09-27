@@ -19,7 +19,7 @@ var SFTPClient = require('../index');
 var sftp = new SFTPClient(config);
 
 // read in test.dat to buffer
-var buffer = fs.readFileSync('test/test.dat');
+var buffer = fs.readFileSync('test/fixtures/test.dat');
 
 describe('stat dir and file', function(){
   it('should return a valid directroy object', function *(){
