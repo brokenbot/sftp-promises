@@ -110,7 +110,6 @@ sftpClient.prototype.ls = function ls(location, session) {
   // create the lsCmd callback for this.sftpCmd
   var lsCmd = function (resolve, reject) {
     return function (err, sftp) {
-      console.log('inside ls callback')
       sftp.stat(location, function (err, stat) {
         if (err) {
           reject(err);
@@ -145,7 +144,6 @@ sftpClient.prototype.stat = function stat(location, session) {
   // create the lsCmd callback for this.sftpCmd
   var statCmd = function (resolve, reject) {
     return function (err, sftp) {
-      console.log('inside ls callback')
       sftp.stat(location, function (err, stat) {
         if (err) {
           reject(err);
