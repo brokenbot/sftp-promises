@@ -10,8 +10,8 @@ chai.should();
 var config = { 
   host: process.env.SFTPHOST || 'localhost', 
   port: process.env.SFTPPORT || 22, 
-  username: process.env.SFTPUSER, 
-  password: process.env.SFTPPASS 
+  username: process.env.SFTPUSER || 'vagrant', 
+  password: process.env.SFTPPASS || 'vagrant'
 };
 
 var SFTPClient = require('../index');
