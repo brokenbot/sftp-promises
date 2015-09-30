@@ -37,7 +37,6 @@ sftpClient.prototype.sftpCmd = function sftpCmd(cmd_cb, session) {
     conn = session 
   } else {
     conn = new Client();
-    conn.connect(self.config)
   }
   
   // reject promise handler
@@ -71,6 +70,7 @@ sftpClient.prototype.sftpCmd = function sftpCmd(cmd_cb, session) {
       conn.on('error', function (err) {
         reject(err)
       })
+      conn.connect(self.config)
     }
   // handle the persistent connection regardless of how promise fairs
   }).then(resolved, rejected)
@@ -87,12 +87,12 @@ sftpClient.prototype.sftpCmd = function sftpCmd(cmd_cb, session) {
 sftpClient.prototype.session = function session(conf) {
   return new Promise( function (resolve, reject){
     var conn = new Client();
+    conn.on('ready', function() { 
+      conn.removeAllListeners()
+      resolve(conn) 
+    })
     try {
       conn.connect(conf)
-      conn.on('read', function() { 
-        conn.removeAllListenrs()
-        return resolve(conn) 
-      })
     } catch(err) {
       reject(err)
     }
