@@ -336,10 +336,53 @@ sftpClient.prototype.mv = function rm(src, dest, session) {
         } else {
           resolve(true)
         }
-      });
+      })
     }
   }
   return this.sftpCmd(mvCmd, session)
 }
 
+/**
+ * removes and empty directory
+ * 
+ * @param {string} path - remote directroy to remove
+ * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+ */
+sftpClient.prototype.rmdir = function rmdir(path, session) {
+  var rmdirCmd = function(resolve, reject) {
+    return function (err, sftp) {
+      sftp.rmdir(path, function (err) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(true)
+        }
+      })
+    }
+  }
+  return this.sftpCmd(rmdirCmd, session)
+}
+
+/**
+ *  makes a directory
+ * 
+ * @param {string} path - remote directory to be created
+ * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+ */
+sftpClient.prototype.mkdir = function mkdir(path, session) {
+  var mkdirCmd = function(resolve, reject) {
+    return function (err, sftp) {
+      sftp.mkdir(path, function (err) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(true)
+        }
+      })
+    }
+  }
+  return this.sftpCmd(mkdirCmd, session)
+}
+
+// export client
 module.exports = sftpClient
