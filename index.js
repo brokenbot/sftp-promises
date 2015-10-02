@@ -116,7 +116,7 @@ SFTPClient.prototype.ls = function ls (location, session) {
       sftp.stat(location, function (err, stat) {
         if (err) {
           reject(err)
-          return false
+          return
         }
         var attrs = statToAttrs(stat)
         if (stat.isDirectory()) {
@@ -127,7 +127,7 @@ SFTPClient.prototype.ls = function ls (location, session) {
         } else if (stat.isFile()) {
           resolve({ path: location, type: 'file', attrs: attrs })
         } else {
-          reject('not a file or directory')
+          resolve({ path: location, type: 'other', attrs: attrs })
         }
       })
     }
@@ -154,7 +154,7 @@ SFTPClient.prototype.stat = function stat (location, session) {
       sftp.stat(location, function (err, stat) {
         if (err) {
           reject(err)
-          return false
+          return
         }
         var attrs = statToAttrs(stat)
         attrs.path = location
@@ -193,15 +193,17 @@ SFTPClient.prototype.getBuffer = function getBuffer (location, session) {
           return
         }
         sftp.fstat(handle, function (err, stat) {
-          if (err) { reject(err); return false }
+          if (err) { 
+            reject(err)
+            return
+          }
           var bytes = stat.size
           var buffer = Buffer(bytes)
           buffer.fill(0)
           var cb = function (err, readBytes, offsetBuffer, position) {
             if (err) {
               reject(err)
-              sftp.close()
-              return false
+              return
             }
             position = position + readBytes
             bytes = bytes - readBytes
@@ -209,10 +211,8 @@ SFTPClient.prototype.getBuffer = function getBuffer (location, session) {
               sftp.close(handle, function (err) {
                 if (err) {
                   reject(err)
-                  return false
                 } else {
                   resolve(buffer)
-                  return
                 }
               })
             } else {
@@ -250,16 +250,14 @@ SFTPClient.prototype.putBuffer = function putBuffer (buffer, location, session) 
         sftp.write(handle, buffer, 0, buffer.length, 0, function (err) {
           if (err) {
             reject(err)
-            return false
+            return
           } else {
             resolve(true)
             sftp.close(handle, function (err) {
               if (err) {
                 reject(err)
-                return false
               } else {
                 resolve(true)
-                return true
               }
             })
           }
