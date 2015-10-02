@@ -33,14 +33,23 @@ describe('SFTPClient()', function () {
     var Client = SFTPClient()
     Client instanceof SFTPClient
   })
+  it('stat("./") with invalid config should fail', function () {
+    var Client = SFTPClient()
+    return Client.stat("./").should.be.rejected
+  })
 })
 
-describe('session(config)', function() {
-  it('session(config) should return valid session', function() {
+describe('session(config)', function () {
+  it('session(config) should return valid session', function () {
     return sftp.session(config).should.be.fulfilled
   })
-  it('session() should be rejected', function() {
+  it('session() should be rejected', function () {
     return sftp.session().should.be.rejected
+  })
+  it('stat("./", session) should be fullfilled', function(){
+    return sftp.session(config).then(function (session) {
+      return sftp.stat('./', session)
+    }).should.be.fulfilled
   })
 })
 
