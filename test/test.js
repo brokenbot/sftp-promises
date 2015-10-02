@@ -17,6 +17,8 @@ var SFTPClient = require('../index');
 
 var sftp = new SFTPClient(config);
 
+var session = sftp.session(config).then(function(s) { session = s })
+
 // read in test.dat to buffer
 var buffer = fs.readFileSync('test/fixtures/test.dat');
 
