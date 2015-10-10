@@ -199,6 +199,10 @@ SFTPClient.prototype.getBuffer = function getBuffer (location, session) {
           }
           var bytes = stat.size
           var buffer = Buffer(bytes)
+          if (bytes === 0) {
+            resolve(buffer)
+            return
+          }
           buffer.fill(0)
           var cb = function (err, readBytes, offsetBuffer, position) {
             if (err) {

@@ -1,7 +1,7 @@
-var fs = require('fs');
+var fs = require('fs')
 
-var chai = require('chai');
-var chaiAsPromised = require("chai-as-promised");
+var chai = require('chai')
+var chaiAsPromised = require("chai-as-promised")
 chai.use(chaiAsPromised)
 
 var should = chai.should()
@@ -11,11 +11,11 @@ var config = {
   port: process.env.SFTPPORT || 22, 
   username: process.env.SFTPUSER || 'vagrant', 
   password: process.env.SFTPPASS || 'vagrant'
-};
+}
 
-var SFTPClient = require('../index');
+var SFTPClient = require('../index')
 
-var sftp = new SFTPClient(config);
+var sftp = new SFTPClient(config)
 
 var session = sftp.session(config).then(function(s) { session = s })
 
@@ -88,11 +88,16 @@ describe('getBuffer(remote)', function () {
   it('getBuffer("/nonexistantfile") should reject', function () {
     return sftp.getBuffer('/nonexistantfile').should.be.rejected
   })
+  it('getBuffer("zero.test") should tranfer zero byte file', function() {
+    return sftp.getBuffer('/home/vagrant/Projects/sftp-promises/test/fixtures/zero.test').then(function(rbuffer) {
+      return rbuffer.length
+     }).should.eventually.equal(0)
+  })
 })
 
 describe('put(local, remote)', function () {
-	it('should transfer local file to remote', function () {
-    return sftp.put('test/fixtures/test.dat', '/tmp/test.dat').should.eventually.be.true
+  it('should transfer local file to remote', function () {
+   return sftp.put('test/fixtures/test.dat', '/tmp/test.dat').should.eventually.be.true
   })
   it('put("test/fixtures/test.dat", "/unwritable") shoule reject', function() {
     return sftp.put('test/fixtures/test.dat', '/unwritable').should.be.rejected
@@ -115,9 +120,9 @@ describe('get(remote, local)', function () {
 })
 
 describe('mv(source, dest)', function () {
-	it('mv("/tmp/test.dat", "/tmp/test.mv.dat") should move a remote file', function () {
-		return sftp.mv('/tmp/test.dat', '/tmp/test.mv.dat').should.eventually.be.true
-	})
+  it('mv("/tmp/test.dat", "/tmp/test.mv.dat") should move a remote file', function () {
+    return sftp.mv('/tmp/test.dat', '/tmp/test.mv.dat').should.eventually.be.true
+  })
   it('mv("/tmp/nonexistant.file","/tmp/test.dat") should fail', function () {
     return sftp.mv('/tmp/nonexistant.file', '/tmp/test.dat').should.be.rejected
   })
@@ -127,9 +132,9 @@ describe('mv(source, dest)', function () {
 })
 
 describe('rm(path)', function () {
-	it('should remove a remote file', function ( ){
-		return sftp.rm('/tmp/test.mv.dat').should.eventually.be.true
-	})
+  it('should remove a remote file', function ( ){
+    return sftp.rm('/tmp/test.mv.dat').should.eventually.be.true
+  })
   it('rm("/tmp") should reject', function () {
     return sftp.rm('/tmp').should.eventually.rejected
   })
