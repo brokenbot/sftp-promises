@@ -119,6 +119,34 @@ describe('get(remote, local)', function () {
   })
 })
 
+describe('getStream(path, writableStream)', function() {
+  it('getStream("/tmp/test.dat", writableStream) should be true', function() {
+    var stream = fs.createWriteStream('/dev/null')
+    return sftp.getStream('/tmp/test.dat', stream).should.eventually.be.true
+  })
+  it('getStream("/tmp/test.dat", nonWritableStream) should reject', function () {
+    return sftp.getStream('/tmp/test.dat', 'notastream').should.be.rejected
+  })
+  it('getStream("/nonexistantfile", writableStream) should reject', function () {
+    var stream = fs.createWriteStream('/dev/null')
+    return sftp.getStream('/nonexistantfile', stream).should.be.rejected
+  })
+})
+
+describe('putStream(path, readableStream)', function() {
+  it('putStream("/tmp/test-stream.dat", readStream) should be true', function() {
+    var stream = fs.createReadStream('test/fixtures/test.dat')
+    return sftp.putStream('/tmp/test.dat', stream).should.eventually.be.true
+  })
+  it('getStream("/tmp/test.dat", nonReadableStream) should reject', function () {
+    return sftp.putStream('/tmp/test.dat', 'notastream').should.be.rejected
+  })
+  it('getStream("/nonewritable/location", writableStream) should reject', function () {
+    var stream = fs.createReadStream('test/fixtures/test.dat')
+    return sftp.getStream('/cantwritehere', stream).should.be.rejected
+  })
+})
+
 describe('mv(source, dest)', function () {
   it('mv("/tmp/test.dat", "/tmp/test.mv.dat") should move a remote file', function () {
     return sftp.mv('/tmp/test.dat', '/tmp/test.mv.dat').should.eventually.be.true
@@ -178,3 +206,5 @@ describe('rmdir(path)', function () {
     return sftp.rmdir('/noexistantdir').should.be.rejected
   })
 })
+
+

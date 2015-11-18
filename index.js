@@ -110,13 +110,11 @@ SFTPClient.prototype.ls = function ls (location, session) {
   var lsCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.stat(location, function (err, stat) {
         if (err) {
-          reject(err)
-          return
+          return reject(err)
         }
         var attrs = statToAttrs(stat)
         if (stat.isDirectory()) {
@@ -148,13 +146,11 @@ SFTPClient.prototype.stat = function stat (location, session) {
   var statCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.stat(location, function (err, stat) {
         if (err) {
-          reject(err)
-          return
+          return reject(err)
         }
         var attrs = statToAttrs(stat)
         attrs.path = location
@@ -184,30 +180,25 @@ SFTPClient.prototype.getBuffer = function getBuffer (location, session) {
   var getBufferCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.open(location, 'r', function (err, handle) {
         if (err) {
-          reject(err)
-          return
+          return reject(err)
         }
         sftp.fstat(handle, function (err, stat) {
           if (err) { 
-            reject(err)
-            return
+            return reject(err)
           }
           var bytes = stat.size
           var buffer = Buffer(bytes)
           if (bytes === 0) {
-            resolve(buffer)
-            return
+            return resolve(buffer)
           }
           buffer.fill(0)
           var cb = function (err, readBytes, offsetBuffer, position) {
             if (err) {
-              reject(err)
-              return
+              return reject(err)
             }
             position = position + readBytes
             bytes = bytes - readBytes
@@ -243,18 +234,15 @@ SFTPClient.prototype.putBuffer = function putBuffer (buffer, location, session) 
   var putBufferCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.open(location, 'w', function (err, handle) {
         if (err) {
-          reject(err)
-          return
+          return reject(err)
         }
         sftp.write(handle, buffer, 0, buffer.length, 0, function (err) {
           if (err) {
-            reject(err)
-            return
+            return reject(err)
           } else {
             resolve(true)
             sftp.close(handle, function (err) {
@@ -283,8 +271,7 @@ SFTPClient.prototype.get = function get (remote, local, session) {
   var getCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.fastGet(remote, local, function (err) {
         if (err) {
@@ -309,8 +296,7 @@ SFTPClient.prototype.put = function put (local, remote, session) {
   var putCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.fastPut(local, remote, function (err) {
         if (err) {
@@ -360,8 +346,7 @@ SFTPClient.prototype.mv = function rm (src, dest, session) {
   var mvCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.rename(src, dest, function (err) {
         if (err) {
@@ -385,14 +370,13 @@ SFTPClient.prototype.rmdir = function rmdir (path, session) {
   var rmdirCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.rmdir(path, function (err) {
         if (err) {
-          reject(err)
+          return reject(err)
         } else {
-          resolve(true)
+          return resolve(true)
         }
       })
     }
@@ -410,14 +394,13 @@ SFTPClient.prototype.mkdir = function mkdir (path, session) {
   var mkdirCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.mkdir(path, function (err) {
         if (err) {
-          reject(err)
+          return reject(err)
         } else {
-          resolve(true)
+          return resolve(true)
         }
       })
     }
@@ -435,14 +418,15 @@ SFTPClient.prototype.mkdir = function mkdir (path, session) {
 SFTPClient.prototype.getStream = function getStream(path, writableStream, session) {
   var getStreamCmd = function (resolve, reject) {
     return function (err, sftp) {
+      if (!writableStream.writable) {
+        return reject(new Error('Stream must be a writable stream'))
+      }
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.stat(path, function (err, stat) {
         if (err) {
-          reject(err)
-          return
+          return reject(err)
         }
         var bytes = stat.size
         if (bytes > 0) {
@@ -451,8 +435,7 @@ SFTPClient.prototype.getStream = function getStream(path, writableStream, sessio
         try {
           var stream = sftp.createReadStream(path, { start: 0, end: bytes})
         } catch(err) {
-          reject(err)
-          return
+          return reject(err)
         }
         stream.pipe(writableStream)
         stream.on('end', function() {
@@ -477,22 +460,23 @@ SFTPClient.prototype.getStream = function getStream(path, writableStream, sessio
 SFTPClient.prototype.putStream = function putStream(path, readableStream, session) {
   var putStreamCmd = function (resolve, reject) {
     return function (err, sftp) {
+      if (!readableStream.readable) {
+        return reject(new Error('Stream must be a readable stream'))
+      }
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       try {
         var stream = sftp.createWriteStream(path)
       } catch (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       readableStream.pipe(stream)
       stream.on('finish', function () {
-        resolve(true)
+        return resolve(true)
       })
       stream.on('error', function (err) {
-        reject(err)
+        return reject(err)
       })
     }
   }
