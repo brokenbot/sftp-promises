@@ -425,6 +425,80 @@ SFTPClient.prototype.mkdir = function mkdir (path, session) {
   return this.sftpCmd(mkdirCmd, session)
 }
 
+/**
+ * stream file contents from remote file
+ * 
+ * @parm {string} path - remote file path
+ * @parm {writableStream} writableStream - writable stream to pipe read data to
+ * @parm {ssh2.Client} [session] - existing ssh2 connection
+ */
+SFTPClient.prototype.getStream = function getStream(path, writableStream, session) {
+  var getStreamCmd = function (resolve, reject) {
+    return function (err, sftp) {
+      if (err) {
+        reject(err)
+        return
+      }
+      sftp.stat(path, function (err, stat) {
+        if (err) {
+          reject(err)
+          return
+        }
+        var bytes = stat.size
+        if (bytes > 0) {
+           bytes -= 1
+        }
+        try {
+          var stream = sftp.createReadStream(path, { start: 0, end: bytes})
+        } catch(err) {
+          reject(err)
+          return
+        }
+        stream.pipe(writableStream)
+        stream.on('end', function() {
+          resolve(true)
+        })
+        stream.on('error', function (err) {
+          reject(err)
+        })
+      })
+    }
+  }
+  return this.sftpCmd(getStreamCmd, session)
+}
+
+/**
+ * stream file contents from local file
+ * 
+ * @parm {string} path - remote file path
+ * @parm {writableStream} writableStream - writable stream to pipe read data to
+ * @parm {ssh2.Client} [session] - existing ssh2 connection
+ */
+SFTPClient.prototype.putStream = function putStream(path, readableStream, session) {
+  var putStreamCmd = function (resolve, reject) {
+    return function (err, sftp) {
+      if (err) {
+        reject(err)
+        return
+      }
+      try {
+        var stream = sftp.createWriteStream(path)
+      } catch (err) {
+        reject(err)
+        return
+      }
+      readableStream.pipe(stream)
+      stream.on('finish', function () {
+        resolve(true)
+      })
+      stream.on('error', function (err) {
+        reject(err)
+      })
+    }
+  }
+  return this.sftpCmd(putStreamCmd, session)
+}
+
 // export client
 module.exports = SFTPClient
 
