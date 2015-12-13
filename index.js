@@ -360,6 +360,76 @@ SFTPClient.prototype.mkdir = function mkdir (path, session) {
 }
 
 /**
+ *  makes a directory recursively
+ *
+ * @param {string} path - remote directory to be created
+ * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+ */
+SFTPClient.prototype.mkdirp = function mkdirp (path, session) {
+  var self = this
+  var conn = session || new Client()
+  session = session || false
+  persist = persist || false
+
+  // handle persisten connection
+  var handleConn = function (failed) {
+    if (!session && (!persist || failed)) {
+      conn.end()
+      conn.destroy()
+    }
+  }
+
+  // reject promise handler
+  var rejected = function (err) {
+    handleConn(true)
+    return Promise.reject(err)
+  }
+
+  // resolve promise handler
+  var resolved = function (val) {
+    handleConn(false)
+    return Promise.resolve(val)
+  }
+
+  return new Promise(function (resolve, reject) {
+    var command = 'mkdir -p "' + path + '"'
+    if (session) {
+      conn.exec(command, function(err) {
+        if(err) {
+          reject(err);
+        } else {
+          resolve(true);
+        }
+      });
+    } else {
+      conn.on('ready', function () {
+        conn.exec(command, function(err, stream) {
+          if(err) {
+            reject(err);
+          } else {
+            stream.on('exit', function(exitcode) {
+              if(exitcode !== 0) {
+                reject('none zero exit code');
+              } else {
+                resolve(true);
+              }
+            });
+          }
+        });
+      })
+      conn.on('end', function () {
+        reject(new Error('Connection closed'))
+      })
+      conn.on('error', function (err) {
+        reject(err)
+      })
+      conn.connect(self.config)
+    }
+  // handle the persistent connection regardless of how promise fairs
+  }).then(resolved, rejected)
+}
+
+/**
  * stream file contents from remote file
  *
  * @parm {string} path - remote file path
