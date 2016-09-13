@@ -21,6 +21,7 @@ var session = sftp.session(config).then(function(s) { session = s })
 
 // read in test.dat to buffer
 var buffer = fs.readFileSync('test/fixtures/test.dat');
+var zbuffer = fs.readFileSync('test/fixtures/zero.test');
 
 describe('SFTPClient()', function () {
   it('new SFTPClient(config) should return SFTPClient', function () {
@@ -55,27 +56,15 @@ describe('session(config)', function () {
   })
 })
 
-describe('ls(path)', function () {
-  it('ls("/") should return a valid directroy object', function () {
-    return sftp.ls('./').should.eventually.contain({type: 'directory'})
-  })
-  it('should return a valid file object', function (){
-    return sftp.ls('./.bash_profile').should.eventually.contain({type: 'file'})
-  })
-  it('ls("/dev/null") should be of type other', function () {
-    return sftp.ls('/dev/null').should.eventually.contain({type: 'other'})
-  })
-  it('ls("./nonexistantfile") should reject', function() {
-    return sftp.ls('somenonexistant.file').should.be.rejected
-  })
-})
-
 describe('putBuffer(buffer, remote)', function(){
   it('put(buffer, "/tmp/test.dat") should transfer buffer', function () {
     return sftp.putBuffer(buffer, '/tmp/test.dat').should.eventually.be.true
   })
   it('put(buffer, "/unwritable") should transfer reject', function() {
     return sftp.putBuffer(buffer, '/unwritable').should.be.rejected
+  })
+  it('put(buffer, "/tmp/zero.test") should put zero byte buffer', function() {
+    return sftp.putBuffer(zbuffer, '/tmp/zero.test').should.eventually.be.true
   })
 })
 
@@ -89,7 +78,7 @@ describe('getBuffer(remote)', function () {
     return sftp.getBuffer('/nonexistantfile').should.be.rejected
   })
   it('getBuffer("zero.test") should tranfer zero byte file', function() {
-    return sftp.getBuffer('/home/vagrant/Projects/sftp-promises/test/fixtures/zero.test').then(function(rbuffer) {
+    return sftp.getBuffer('/tmp/zero.test').then(function(rbuffer) {
       return rbuffer.length
      }).should.eventually.equal(0)
   })
@@ -159,12 +148,18 @@ describe('mv(source, dest)', function () {
   })
 })
 
-describe('rm(path)', function () {
-  it('should remove a remote file', function ( ){
-    return sftp.rm('/tmp/test.mv.dat').should.eventually.be.true
+describe('ls(path)', function () {
+  it('ls("/") should return a valid directroy object', function () {
+    return sftp.ls('./').should.eventually.contain({type: 'directory'})
   })
-  it('rm("/tmp") should reject', function () {
-    return sftp.rm('/tmp').should.eventually.rejected
+  it('ls("/tmp/zero.test") should return a valid file object', function (){
+    return sftp.ls('/tmp/zero.test').should.eventually.contain({type: 'file'})
+  })
+  it('ls("/dev/null") should be of type other', function () {
+    return sftp.ls('/dev/null').should.eventually.contain({type: 'other'})
+  })
+  it('ls("./nonexistantfile") should reject', function() {
+    return sftp.ls('somenonexistant.file').should.be.rejected
   })
 })
 
@@ -172,8 +167,8 @@ describe('stat(path)', function () {
   it('stat("/tmp") should be true', function () {
     return sftp.stat('/tmp').should.eventually.contain({type: 'directory'})
   })
-  it('stat("./.bash_profile") should be file', function () {
-    return sftp.stat('./.bash_profile').should.eventually.contain({type: 'file'})
+  it('stat("/tmp/zero.test") should be file', function () {
+    return sftp.stat('/tmp/zero.test').should.eventually.contain({type: 'file'})
   })
   it('stat("/dev/null") should be type other', function () {
     return sftp.stat('/dev/null').should.eventually.contain({type: 'other'})
@@ -183,6 +178,18 @@ describe('stat(path)', function () {
   })
   it('stat("/nonexistantfile")', function () {
     return sftp.stat('/nonexistantfile').should.be.rejected
+  })
+})
+
+describe('rm(path)', function () {
+  it('should remove a remote file', function ( ){
+    return sftp.rm('/tmp/test.mv.dat').should.eventually.be.true
+  })
+  it('should remove a remote file', function() {
+    return sftp.rm('/tmp/zero.test').should.eventually.be.true
+  })
+  it('rm("/tmp") should reject', function () {
+    return sftp.rm('/tmp').should.eventually.rejected
   })
 })
 
