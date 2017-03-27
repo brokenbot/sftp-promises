@@ -90,6 +90,9 @@ SFTPClient.prototype.session = function session (conf) {
       conn.removeAllListeners()
       resolve(conn)
     })
+    .on('error', function (err) {
+      reject(err)
+    })
     try {
       conn.connect(conf)
     } catch (err) {
