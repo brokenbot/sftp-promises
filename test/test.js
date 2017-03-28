@@ -15,6 +15,13 @@ var config = {
   password: process.env.SFTPPASS || 'vagrant'
 }
 
+var invalidLogin = {
+  host: process.env.SFTPHOST || 'localhost',
+  port: process.env.SFTPPORT || 22,
+  username: 'invaliduser',
+  password: 'invalid password'
+}
+
 var SFTPClient = require('../index')
 
 var sftp = new SFTPClient(config)
@@ -36,6 +43,10 @@ describe('SFTPClient()', function () {
     var Client = SFTPClient()
     return Client instanceof SFTPClient
   })
+  it('stat("./") with invalid login should fail', function () {
+    var Client = SFTPClient(invalidLogin)
+    return Client.stat('./').should.be.rejected
+  })
   it('stat("./") with invalid config should fail', function () {
     var Client = SFTPClient()
     return Client.stat('./').should.be.rejected
@@ -45,6 +56,9 @@ describe('SFTPClient()', function () {
 describe('session(config)', function () {
   it('session(config) should return valid session', function () {
     return sftp.session(config).should.be.fulfilled
+  })
+  it('should fail with due to invalid login', function () {
+    return sftp.session(invalidLogin).should.be.rejected
   })
   it('session() should be rejected', function () {
     return sftp.session().should.be.rejected
