@@ -24,10 +24,10 @@ SFTPClient.prototype.CODES = require('ssh2').SFTP_STATUS_CODE
 /**
 * Creates connection and promise wrapper for sftp commands
 *
-* @param {callback} cmd_cb - callback for sftp, takes connection, reject and resolve cmb_cb(con, reject,resolve)
+* @param {callback} cmdCB - callback for sftp, takes connection, reject and resolve cmb_cb(con, reject,resolve)
 * @param {ssh2.Client} [session] - existing ssh2 connection, optional
 */
-SFTPClient.prototype.sftpCmd = function sftpCmd (cmd_cb, session) {
+SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session) {
   var self = this
   session = session || false
   // setup connection
@@ -61,10 +61,10 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmd_cb, session) {
 
   return new Promise(function (resolve, reject) {
     if (session) {
-      conn.sftp(cmd_cb(resolve, reject))
+      conn.sftp(cmdCB(resolve, reject))
     } else {
       conn.on('ready', function () {
-        conn.sftp(cmd_cb(resolve, reject))
+        conn.sftp(cmdCB(resolve, reject))
       })
       conn.on('error', function (err) {
         reject(err)
@@ -190,7 +190,7 @@ SFTPClient.prototype.getBuffer = function getBuffer (location, session) {
           return reject(err)
         }
         sftp.fstat(handle, function (err, stat) {
-          if (err) { 
+          if (err) {
             return reject(err)
           }
           var bytes = stat.size
@@ -413,12 +413,12 @@ SFTPClient.prototype.mkdir = function mkdir (path, session) {
 
 /**
  * stream file contents from remote file
- * 
+ *
  * @parm {string} path - remote file path
  * @parm {writableStream} writableStream - writable stream to pipe read data to
  * @parm {ssh2.Client} [session] - existing ssh2 connection
  */
-SFTPClient.prototype.getStream = function getStream(path, writableStream, session) {
+SFTPClient.prototype.getStream = function getStream (path, writableStream, session) {
   var getStreamCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (!writableStream.writable) {
@@ -433,15 +433,15 @@ SFTPClient.prototype.getStream = function getStream(path, writableStream, sessio
         }
         var bytes = stat.size
         if (bytes > 0) {
-           bytes -= 1
+          bytes -= 1
         }
         try {
-          var stream = sftp.createReadStream(path, { start: 0, end: bytes})
-        } catch(err) {
+          var stream = sftp.createReadStream(path, {start: 0, end: bytes})
+        } catch (err) {
           return reject(err)
         }
         stream.pipe(writableStream)
-        stream.on('end', function() {
+        stream.on('end', function () {
           resolve(true)
         })
         stream.on('error', function (err) {
@@ -455,12 +455,12 @@ SFTPClient.prototype.getStream = function getStream(path, writableStream, sessio
 
 /**
  * stream file contents from local file
- * 
+ *
  * @parm {string} path - remote file path
  * @parm {writableStream} writableStream - writable stream to pipe read data to
  * @parm {ssh2.Client} [session] - existing ssh2 connection
  */
-SFTPClient.prototype.putStream = function putStream(path, readableStream, session) {
+SFTPClient.prototype.putStream = function putStream (path, readableStream, session) {
   var putStreamCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (!readableStream.readable) {
@@ -488,4 +488,3 @@ SFTPClient.prototype.putStream = function putStream(path, readableStream, sessio
 
 // export client
 module.exports = SFTPClient
-
