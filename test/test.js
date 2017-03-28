@@ -6,7 +6,7 @@ var chai = require('chai')
 var chaiAsPromised = require('chai-as-promised')
 chai.use(chaiAsPromised)
 
-var should = chai.should()
+var should = chai.should() // eslint-disable-line no-unused-vars
 
 var config = {
   host: process.env.SFTPHOST || 'localhost',
