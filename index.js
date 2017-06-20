@@ -247,7 +247,6 @@ SFTPClient.prototype.putBuffer = function putBuffer (buffer, location, session) 
           if (err) {
             return reject(err)
           } else {
-            resolve(true)
             sftp.close(handle, function (err) {
               if (err) {
                 reject(err)
