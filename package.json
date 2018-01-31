@@ -1,6 +1,6 @@
 {
   "name": "sftp-promises",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "SFTP Promise wrapper for ssh2 SFTP commands",
   "main": "index.js",
   "scripts": {
@@ -14,7 +14,8 @@
   "keywords": [
     "sftp",
     "promises",
-    "ssh2"
+    "ssh2",
+    "ssh"
   ],
   "author": "Dave Sanderson",
   "license": "BSD-3-Clause",
@@ -23,8 +24,8 @@
   },
   "homepage": "https://github.com/brokenbot/sftp-promises#readme",
   "dependencies": {
-    "ssh2": "^0.5.1",
-    "ssh2-streams": "^0.1.8"
+    "ssh2": "^0.5.5",
+    "ssh2-streams": "^0.1.20"
   },
   "devDependencies": {
     "chai": "^3.3.0",

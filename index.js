@@ -1,4 +1,5 @@
 var Client = require('ssh2').Client
+var fs = require('fs')
 
 var statToAttrs = function (stats) {
   var attrs = {}
@@ -473,7 +474,9 @@ SFTPClient.prototype.putStream = function putStream (path, readableStream, sessi
       } catch (err) {
         return reject(err)
       }
-      readableStream.pipe(stream)
+      stream.on('open', function () {
+        readableStream.pipe(stream)
+      })
       stream.on('finish', function () {
         return resolve(true)
       })
@@ -491,8 +494,8 @@ SFTPClient.prototype.putStream = function putStream (path, readableStream, sessi
  * @parm {string} path - remote file path
  * @parm {ssh2.Client} [session] - existing ssh2 connection
  */
-SFTPClient.prototype.getReadStream = function getReadStream (path, session) {
-  var getReadStreamCmd = function (resolve, reject) {
+SFTPClient.prototype.createReadStream = function getReadStream (path, options, session) {
+  var createReadStreamCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
         return reject(err)
@@ -510,7 +513,7 @@ SFTPClient.prototype.getReadStream = function getReadStream (path, session) {
         } catch (err) {
           return reject(err)
         }
-        stream.on('open', function () {
+        stream.on('readable', function () {
           resolve(stream)
         })
         stream.on('error', function (err) {
@@ -519,7 +522,7 @@ SFTPClient.prototype.getReadStream = function getReadStream (path, session) {
       })
     }
   }
-  return this.sftpCmd(getReadStreamCmd, session)
+  return this.sftpCmd(createReadStreamCmd, session)
 }
 
 /**
@@ -528,8 +531,8 @@ SFTPClient.prototype.getReadStream = function getReadStream (path, session) {
  * @parm {string} path - remote file path
  * @parm {ssh2.Client} [session] - existing ssh2 connection
  */
-SFTPClient.prototype.getWriteStream = function getWriteStream (path, readableStream, session) {
-  var getWriteStreamCmd = function (resolve, reject) {
+SFTPClient.prototype.createWriteStream = function createWriteStream (path, options, session) {
+  var createWriteStreamCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
         return reject(err)
@@ -539,15 +542,15 @@ SFTPClient.prototype.getWriteStream = function getWriteStream (path, readableStr
       } catch (err) {
         return reject(err)
       }
-      stream.on('open', function () {
-        return resolve(stream)
-      })
       stream.on('error', function (err) {
         return reject(err)
       })
+      stream.on('open', function () {
+        return resolve(stream)
+      })
     }
   }
-  return this.sftpCmd(getWriteStreamCmd, session)
+  return this.sftpCmd(createWriteStreamCmd, session)
 }
 
 // export client
