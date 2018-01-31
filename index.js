@@ -456,7 +456,7 @@ SFTPClient.prototype.getStream = function getStream (path, writableStream, sessi
  * stream file contents from local file
  *
  * @parm {string} path - remote file path
- * @parm {writableStream} writableStream - writable stream to pipe read data to
+ * @parm {readableStream} readableStream - writable stream to pipe read data to
  * @parm {ssh2.Client} [session] - existing ssh2 connection
  */
 SFTPClient.prototype.putStream = function putStream (path, readableStream, session) {
@@ -483,6 +483,71 @@ SFTPClient.prototype.putStream = function putStream (path, readableStream, sessi
     }
   }
   return this.sftpCmd(putStreamCmd, session)
+}
+
+/**
+ * get a readable stream to remote file
+ *
+ * @parm {string} path - remote file path
+ * @parm {ssh2.Client} [session] - existing ssh2 connection
+ */
+SFTPClient.prototype.getReadStream = function getReadStream (path, session) {
+  var getReadStreamCmd = function (resolve, reject) {
+    return function (err, sftp) {
+      if (err) {
+        return reject(err)
+      }
+      sftp.stat(path, function (err, stat) {
+        if (err) {
+          return reject(err)
+        }
+        var bytes = stat.size
+        if (bytes > 0) {
+          bytes -= 1
+        }
+        try {
+          var stream = sftp.createReadStream(path, {start: 0, end: bytes})
+        } catch (err) {
+          return reject(err)
+        }
+        stream.on('open', function () {
+          resolve(stream)
+        })
+        stream.on('error', function (err) {
+          reject(err)
+        })
+      })
+    }
+  }
+  return this.sftpCmd(getReadStreamCmd, session)
+}
+
+/**
+ * get a writable stream to remote file
+ *
+ * @parm {string} path - remote file path
+ * @parm {ssh2.Client} [session] - existing ssh2 connection
+ */
+SFTPClient.prototype.getWriteStream = function getWriteStream (path, readableStream, session) {
+  var getWriteStreamCmd = function (resolve, reject) {
+    return function (err, sftp) {
+      if (err) {
+        return reject(err)
+      }
+      try {
+        var stream = sftp.createWriteStream(path)
+      } catch (err) {
+        return reject(err)
+      }
+      stream.on('open', function () {
+        return resolve(stream)
+      })
+      stream.on('error', function (err) {
+        return reject(err)
+      })
+    }
+  }
+  return this.sftpCmd(getWriteStreamCmd, session)
 }
 
 // export client
