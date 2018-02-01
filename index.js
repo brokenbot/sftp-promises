@@ -494,7 +494,7 @@ SFTPClient.prototype.putStream = function putStream (path, readableStream, sessi
  * @parm {string} path - remote file path
  * @parm {ssh2.Client} [session] - existing ssh2 connection
  */
-SFTPClient.prototype.createReadStream = function getReadStream (path, options, session) {
+SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
   var createReadStreamCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
@@ -531,7 +531,7 @@ SFTPClient.prototype.createReadStream = function getReadStream (path, options, s
  * @parm {string} path - remote file path
  * @parm {ssh2.Client} [session] - existing ssh2 connection
  */
-SFTPClient.prototype.createWriteStream = function createWriteStream (path, options, session) {
+SFTPClient.prototype.createWriteStream = function createWriteStream (path, session) {
   var createWriteStreamCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
