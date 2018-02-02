@@ -28,9 +28,15 @@ SFTPClient.prototype.CODES = require('ssh2').SFTP_STATUS_CODE
 * @param {callback} cmdCB - callback for sftp, takes connection, reject and resolve cmb_cb(con, reject,resolve)
 * @param {ssh2.Client} [session] - existing ssh2 connection, optional
 */
-SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session) {
+SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
   var self = this
   session = session || false
+  if (session) {
+    persist = true
+  } else {
+    persist = persist || false
+  }
+
   // setup connection
   var conn
   if (session) {
@@ -52,12 +58,11 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session) {
   }
 
   // handle persisten connection
-  var handleConn = function (retPromise) {
-    if (!session) {
+  var handleConn = function () {
+    if (!persist) {
       conn.end()
       conn.destroy()
     }
-    return retPromise
   }
 
   return new Promise(function (resolve, reject) {
@@ -65,7 +70,7 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session) {
       conn.sftp(cmdCB(resolve, reject))
     } else {
       conn.on('ready', function () {
-        conn.sftp(cmdCB(resolve, reject))
+        conn.sftp(cmdCB(resolve, reject, conn))
       })
       conn.on('error', function (err) {
         reject(err)
@@ -495,7 +500,7 @@ SFTPClient.prototype.putStream = function putStream (path, readableStream, sessi
  * @parm {ssh2.Client} [session] - existing ssh2 connection
  */
 SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
-  var createReadStreamCmd = function (resolve, reject) {
+  var createReadStreamCmd = function (resolve, reject, conn) {
     return function (err, sftp) {
       if (err) {
         return reject(err)
@@ -513,11 +518,22 @@ SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
         } catch (err) {
           return reject(err)
         }
-        stream.on('readable', function () {
-          resolve(stream)
+        stream.on('close', function () {
+          // if there is no session we need to clean the connection
+          if (!session) {
+            conn.end()
+            conn.destroy()
+          }
         })
         stream.on('error', function (err) {
-          reject(err)
+          if (!session) {
+            conn.end()
+            conn.destroy()
+          }
+          return reject(err)
+        })
+        stream.on('readable', function () {
+          resolve(stream)
         })
       })
     }
@@ -532,7 +548,7 @@ SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
  * @parm {ssh2.Client} [session] - existing ssh2 connection
  */
 SFTPClient.prototype.createWriteStream = function createWriteStream (path, session) {
-  var createWriteStreamCmd = function (resolve, reject) {
+  var createWriteStreamCmd = function (resolve, reject, conn) {
     return function (err, sftp) {
       if (err) {
         return reject(err)
@@ -542,7 +558,18 @@ SFTPClient.prototype.createWriteStream = function createWriteStream (path, sessi
       } catch (err) {
         return reject(err)
       }
+      stream.on('close', function () {
+        // if there is no session we need to clean the connection
+        if (!session) {
+          conn.end()
+          conn.destroy()
+        }
+      })
       stream.on('error', function (err) {
+        if (!session) {
+          conn.end()
+          conn.destroy()
+        }
         return reject(err)
       })
       stream.on('open', function () {
@@ -550,7 +577,7 @@ SFTPClient.prototype.createWriteStream = function createWriteStream (path, sessi
       })
     }
   }
-  return this.sftpCmd(createWriteStreamCmd, session)
+  return this.sftpCmd(createWriteStreamCmd, session, true)
 }
 
 // export client
