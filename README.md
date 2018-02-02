@@ -7,10 +7,7 @@
 Support basic SFTP transaction with promises, specifically for fronting SFTP with a web based API using something like Koa
 
 ### Warning
-Each request will create a new conneciton and close it when finished, this is by design as its intended to be used in stateless web applications.  As such care should exercised when using on high traffic systems to avoid too many connections to SFTP server and general connection overhead.  
-
-### Streams
-The current streams implementation requires supplying either readable or writable streams and do not return promises with streams like the getBuffer method.  This is to support non-presistent connections which would drop if a stream was returned on the promise resolve. 
+By default each request will create a new conneciton and close it when finished, this is by design as its intended to be used in stateless web applications.  As such care should exercised when using on high traffic systems to avoid too many connections to SFTP server and general connection overhead.  
 
 # Usage
 _**One connection per call**_
@@ -57,8 +54,14 @@ config options are the same as [ssh2](https://github.com/mscdex/ssh2) config opt
 **sftp.rmdir(\<string>path, [ssh2.Connection]session)** returns a promise with a boolean, true if successful
 **sftp.getStream(\<string>path, <writableStream>writableStream, [ssh2.Connection]session)** returns a promise with a boolean, true if stream write completed
 **sftp.putStream(\<string>path, <writableStream>writableStream, [ssh2.Connection]session)** returns a promise with a boolean, true is stream write completed
+**sftp.createReadStream(\<string>path, [ssh2.Connection]session)** returns a promise with a readStream (ssh session will terminate on streams events close and error)
+**sftp.createWriteStream(\<string>path, [ssh2.Connection]session)** returns a promise with a writeStream (ssh session will terminate on streams events close and error)
 
-# Planned Features/Updates
-* have test rely on ssh2.server instead of local ssh server
 
-
+# ToDo
+* better testing of sessions
+* validate sftp session is actually a valid ssh session
+* mkdir recursive
+* rmdir recursive
+* ability to add options to be passed to underlying ssh2 connections
+* better documentation
