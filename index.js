@@ -1,5 +1,4 @@
 var Client = require('ssh2').Client
-var fs = require('fs')
 
 var statToAttrs = function (stats) {
   var attrs = {}

@@ -12,7 +12,6 @@ By default each request will create a new conneciton and close it when finished,
 # Usage
 _**One connection per call**_
 
-
 ```javascript
 var config = {host: 'localhost', username: 'user', password: 'pass' };
 var SFTPClient = require('sftp-promises');

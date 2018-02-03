@@ -141,12 +141,32 @@ describe('putStream(path, readableStream)', function () {
     var stream = fs.createReadStream('test/fixtures/test.dat')
     return sftp.putStream('/tmp/test.dat', stream).should.eventually.be.true
   })
-  it('getStream("/tmp/test.dat", nonReadableStream) should reject', function () {
+  it('putStream("/tmp/test.dat", nonReadableStream) should reject', function () {
     return sftp.putStream('/tmp/test.dat', 'notastream').should.be.rejected
   })
-  it('getStream("/nonewritable/location", writableStream) should reject', function () {
+  it('puttStream("/nonewritable/location", writableStream) should reject', function () {
     var stream = fs.createReadStream('test/fixtures/test.dat')
-    return sftp.getStream('/cantwritehere', stream).should.be.rejected
+    return sftp.putStream('/cantwritehere', stream).should.be.rejected
+  })
+})
+
+describe('createReadStream(path)', function () {
+  it('createReadStream("/tmp/test.dat") should be true', function () {
+    var stream = fs.createWriteStream('/dev/null')
+    return sftp.createReadStream('/tmp/test.dat').then(function (rs) { rs.pipe(stream) }).should.eventually.resolve
+  })
+  it('createReadStream("/nonexistantfile") should reject', function () {
+    return sftp.createReadStream('/nonexistantfile').should.be.rejected
+  })
+})
+
+describe('createWriteStream(path)', function () {
+  it('createWriteStream("/tmp/test-stream.dat", readStream) should be true', function () {
+    var stream = fs.createReadStream('test/fixtures/test.dat')
+    return sftp.createWriteStream('/tmp/test.dat').then(function (ws) { stream.pipe(ws) }).should.eventually.reslove
+  })
+  it('createWriteStream("/nonewritable/location") should reject', function () {
+    return sftp.createWriteStream('/cantwritehere').should.be.rejected
   })
 })
 
