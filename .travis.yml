@@ -6,4 +6,4 @@ node_js:
 before_script: 
   - sudo useradd vagrant
   - sudo sh -c 'echo vagrant:vagrant | chgpasswd'
-  - sudo netstat -tlpn
+  - sudo cat /etc/ssh/sshd_*
