@@ -4,8 +4,7 @@
   "description": "SFTP Promise wrapper for ssh2 SFTP commands",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
-    "cover": "istanbul cover _mocha -- -R spec"
+    "test": "istanbul cover _mocha -- -R spec"
   },
   "repository": {
     "type": "git",
@@ -31,6 +30,8 @@
     "chai": "^3.3.0",
     "chai-as-promised": "^6.0.0",
     "mocha": "^3.0.2",
-    "standard": "^9.0.2"
+    "standard": "^9.0.2",
+    "coveralls": "^3.0.0",
+    "istanbul": "^0.4.5"
   }
 }

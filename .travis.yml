@@ -1,0 +1,9 @@
+dist: trusty
+sudo: required
+language: node_js
+node_js:
+  - "lts/*"
+before_script: 
+  - sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
+after_failure:
+  - sudo cat /var/log/auth.log
