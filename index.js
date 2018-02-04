@@ -327,8 +327,7 @@ SFTPClient.prototype.rm = function rm (location, session) {
   var rmCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
-        reject(err)
-        return
+        return reject(err)
       }
       sftp.unlink(location, function (err) {
         if (err) {
@@ -517,7 +516,7 @@ SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
         } catch (err) {
           return reject(err)
         }
-        stream.on('close', function () {
+        stream.on('end', function () {
           // if there is no session we need to clean the connection
           if (!session) {
             conn.end()

@@ -46,7 +46,7 @@ describe('SFTPClient()', function () {
   it('stat("./") with invalid login should fail', function () {
     var Client = SFTPClient(invalidLogin)
     return Client.stat('./').should.be.rejected
-  })
+  }).timeout(10000)
   it('stat("./") with invalid config should fail', function () {
     var Client = SFTPClient()
     return Client.stat('./').should.be.rejected
@@ -59,7 +59,7 @@ describe('session(config)', function () {
   })
   it('should fail with due to invalid login', function () {
     return sftp.session(invalidLogin).should.be.rejected
-  })
+  }).timeout(10000)
   it('session() should be rejected', function () {
     return sftp.session().should.be.rejected
   })
@@ -152,8 +152,8 @@ describe('putStream(path, readableStream)', function () {
 
 describe('createReadStream(path)', function () {
   it('createReadStream("/tmp/test.dat") should be true', function () {
-    var stream = fs.createWriteStream('/dev/null')
-    return sftp.createReadStream('/tmp/test.dat').then(function (rs) { rs.pipe(stream) }).should.eventually.resolve
+    var wstream = fs.createWriteStream('/dev/null')
+    return sftp.createReadStream('/tmp/test.dat').then(function (rs) { rs.pipe(wstream) }).should.be.fulfilled
   })
   it('createReadStream("/nonexistantfile") should reject', function () {
     return sftp.createReadStream('/nonexistantfile').should.be.rejected
@@ -161,9 +161,9 @@ describe('createReadStream(path)', function () {
 })
 
 describe('createWriteStream(path)', function () {
-  it('createWriteStream("/tmp/test-stream.dat", readStream) should be true', function () {
+  it('createWriteStream("/tmp/test-stream.dat") should be fullfilled', function () {
     var stream = fs.createReadStream('test/fixtures/test.dat')
-    return sftp.createWriteStream('/tmp/test.dat').then(function (ws) { stream.pipe(ws) }).should.eventually.reslove
+    return sftp.createWriteStream('/tmp/test-stream.dat').then(function (ws) { stream.pipe(ws) }).should.be.fulfilled
   })
   it('createWriteStream("/nonewritable/location") should reject', function () {
     return sftp.createWriteStream('/cantwritehere').should.be.rejected
