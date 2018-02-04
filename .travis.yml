@@ -3,5 +3,5 @@ sudo: required
 language: node_js
 node_js:
   - "lts/*"
-script: sudo useradd vagrant && sudo sh -c 'echo vagrant:vagrant | chgpasswd'
+before_script: sudo useradd vagrant && sudo sh -c 'echo vagrant:vagrant | chgpasswd'
 
