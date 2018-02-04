@@ -6,6 +6,5 @@ node_js:
 before_script: 
   - sudo useradd vagrant
   - sudo sh -c 'echo vagrant:vagrant | chgpasswd'
-  - sudo cat /etc/passwd
+after_failure:
   - sudo cat /var/log/auth.log
-  
