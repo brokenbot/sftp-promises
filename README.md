@@ -1,6 +1,6 @@
 # sftp-promises
 
-[![NPM version](http://img.shields.io/npm/v/sftp-promises.svg?style=flat)](https://npmjs.org/package/sftp-promises)[![Coverage Status](https://coveralls.io/repos/brokenbot/sftp-promises/badge.svg?branch=master&service=github)](https://coveralls.io/github/brokenbot/sftp-promises?branch=master)
+[![NPM version](http://img.shields.io/npm/v/sftp-promises.svg?style=flat)](https://npmjs.org/package/sftp-promises)[![Coverage Status](https://coveralls.io/repos/brokenbot/sftp-promises/badge.svg?branch=master&service=github)](https://coveralls.io/github/brokenbot/sftp-promises?branch=master)[![Build Status](https://travis-ci.org/brokenbot/sftp-promises.svg?branch=master)](https://travis-ci.org/brokenbot/sftp-promises)
 
 >SFTP Promise Wrapper for ssh2
 
