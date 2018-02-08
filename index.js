@@ -71,6 +71,9 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
       conn.on('ready', function () {
         conn.sftp(cmdCB(resolve, reject, conn))
       })
+      conn.on('end', function() {
+        reject(new Error('Connection closed');
+      });
       conn.on('error', function (err) {
         reject(err)
       })
@@ -94,6 +97,9 @@ SFTPClient.prototype.session = function session (conf) {
     conn.on('ready', function () {
       conn.removeAllListeners()
       resolve(conn)
+    })
+    .on('end', function() {
+      reject(new Error('Connection closed');
     })
     .on('error', function (err) {
       reject(err)
