@@ -49,12 +49,12 @@ config options are the same as [ssh2](https://github.com/mscdex/ssh2) config opt
 **sftp.put(\<string>local\_path, \<string>remote\_path, [ssh2.Connection]session)** returns a promise with a boolean, true if successful  
 **sftp.rm(\<string>location, [ssh2.Connection]session)** returns a promise with a boolean, true if successful  
 **sftp.mv(\<string>src, \<string>dest, [ssh2.Connection]session)** returns a promise with a boolean, true if successful 
-**sftp.mkdir(\<string>path, [ssh2.Connection]session)** returns a promise with a boolean, true if successful
-**sftp.rmdir(\<string>path, [ssh2.Connection]session)** returns a promise with a boolean, true if successful
-**sftp.getStream(\<string>path, <writableStream>writableStream, [ssh2.Connection]session)** returns a promise with a boolean, true if stream write completed
-**sftp.putStream(\<string>path, <writableStream>writableStream, [ssh2.Connection]session)** returns a promise with a boolean, true is stream write completed
-**sftp.createReadStream(\<string>path, [ssh2.Connection]session)** returns a promise with a readStream (ssh session will terminate on streams events close and error)
-**sftp.createWriteStream(\<string>path, [ssh2.Connection]session)** returns a promise with a writeStream (ssh session will terminate on streams events close and error)
+**sftp.mkdir(\<string>path, [ssh2.Connection]session)** returns a promise with a boolean, true if successful 
+**sftp.rmdir(\<string>path, [ssh2.Connection]session)** returns a promise with a boolean, true if successful 
+**sftp.getStream(\<string>path, <writableStream>writableStream, [ssh2.Connection]session)** returns a promise with a boolean, true if stream write completed  
+**sftp.putStream(\<string>path, <writableStream>writableStream, [ssh2.Connection]session)** returns a promise with a boolean, true is stream write completed  
+**sftp.createReadStream(\<string>path, [ssh2.Connection]session)** returns a promise with a readStream (ssh session will terminate on streams events close and error)  
+**sftp.createWriteStream(\<string>path, [ssh2.Connection]session)** returns a promise with a writeStream (ssh session will terminate on streams events close and error)  
 
 
 # ToDo
