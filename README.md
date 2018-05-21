@@ -17,7 +17,7 @@ var config = {host: 'localhost', username: 'user', password: 'pass' };
 var SFTPClient = require('sftp-promises');
 var sftp = new SFTPClient(config);
      
-sftp.ls('~/').then(function(list) { console.log(list) })
+sftp.ls('.').then(function(list) { console.log(list) })
 ```
 
 _**Persistent Session calls (Experimental)**_
@@ -30,7 +30,7 @@ var sftp = new SFTPClient();
 // get session
 var session = sftp.session(config).then(function(ftpSession) { session = ftpSession })
 ...code to ensure session is ready...  
-sftp.ls('~/', session).then(function(list) { console.log(list) })
+sftp.ls('.', session).then(function(list) { console.log(list) })
 
 // close socket
 session.end()
