@@ -6,7 +6,7 @@ node_js:
 before_script: 
   - sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
 script:
-  - npm coverage
+  - npm run coverage
   - npm run check-coverage
 after_success:
   - npm run report-coverage
