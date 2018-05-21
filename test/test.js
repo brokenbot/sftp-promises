@@ -55,7 +55,10 @@ describe('SFTPClient()', function () {
 
 describe('session(config)', function () {
   it('session(config) should return valid session', function () {
-    return sftp.session(config).should.be.fulfilled
+    return sftp.session(config).should.be.fulfilled.then(function (session) {
+      session.end()
+      session.destroy()
+    })
   })
   it('should fail with due to invalid login', function () {
     return sftp.session(invalidLogin).should.be.rejected
@@ -65,7 +68,10 @@ describe('session(config)', function () {
   })
   it('stat("./", session) should be fullfilled', function () {
     return sftp.session(config).then(function (session) {
-      return sftp.stat('./', session)
+      sftp.stat('./', session).then(function () {
+        session.end()
+        session.destroy()
+      })
     }).should.be.fulfilled
   })
 })
@@ -144,7 +150,7 @@ describe('putStream(path, readableStream)', function () {
   it('putStream("/tmp/test.dat", nonReadableStream) should reject', function () {
     return sftp.putStream('/tmp/test.dat', 'notastream').should.be.rejected
   })
-  it('puttStream("/nonewritable/location", writableStream) should reject', function () {
+  it('putStream("/nonewritable/location", writableStream) should reject', function () {
     var stream = fs.createReadStream('test/fixtures/test.dat')
     return sftp.putStream('/cantwritehere', stream).should.be.rejected
   })
@@ -247,3 +253,4 @@ describe('rmdir(path)', function () {
     return sftp.rmdir('/noexistantdir').should.be.rejected
   })
 })
+
