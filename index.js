@@ -44,6 +44,14 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
     conn = new Client()
   }
 
+  // handle persisten connection
+  var handleConn = function () {
+    if (!persist) {
+      conn.end()
+      conn.destroy()
+    }
+  }
+
   // reject promise handler
   var rejected = function (err) {
     handleConn()
@@ -56,14 +64,6 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
     return Promise.resolve(val)
   }
 
-  // handle persisten connection
-  var handleConn = function () {
-    if (!persist) {
-      conn.end()
-      conn.destroy()
-    }
-  }
-
   return new Promise(function (resolve, reject) {
     if (session) {
       conn.sftp(cmdCB(resolve, reject))
@@ -71,9 +71,9 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
       conn.on('ready', function () {
         conn.sftp(cmdCB(resolve, reject, conn))
       })
-      conn.on('end', function() {
-        reject(new Error('Connection closed'));
-      });
+      conn.on('end', function () {
+        reject(new Error('Connection closed'))
+      })
       conn.on('error', function (err) {
         reject(err)
       })
@@ -98,8 +98,8 @@ SFTPClient.prototype.session = function session (conf) {
       conn.removeAllListeners()
       resolve(conn)
     })
-    .on('end', function() {
-      reject(new Error('Connection closed'));
+    .on('end', function () {
+      reject(new Error('Connection closed'))
     })
     .on('error', function (err) {
       reject(err)
