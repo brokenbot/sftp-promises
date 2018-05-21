@@ -4,7 +4,10 @@
   "description": "SFTP Promise wrapper for ssh2 SFTP commands",
   "main": "index.js",
   "scripts": {
-    "test": "istanbul cover _mocha -- -R spec"
+    "test": "mocha",
+    "coverage": "istanbul cover _mocha -- -R spec",
+    "check-coverage": "istanbul check-coverage --statements 85 --branches 70 --functions 90 --lines 90",
+    "report-coverage": "cat ./coverage/lcov.info | coveralls"
   },
   "repository": {
     "type": "git",
@@ -29,7 +32,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-as-promised": "^7.1.1",
-    "coveralls": "^3.0.0",
+    "coveralls": "^3.0.1",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
     "standard": "^11.0.1"
