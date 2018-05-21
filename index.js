@@ -29,24 +29,13 @@ SFTPClient.prototype.CODES = require('ssh2').SFTP_STATUS_CODE
 */
 SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
   var self = this
+  var conn = session || new Client()
   session = session || false
-  if (session) {
-    persist = true
-  } else {
-    persist = persist || false
-  }
-
-  // setup connection
-  var conn
-  if (session) {
-    conn = session
-  } else {
-    conn = new Client()
-  }
+  persist = persist || false
 
   // handle persisten connection
-  var handleConn = function () {
-    if (!persist) {
+  var handleConn = function (failed) {
+    if (!session && (!persist || failed)) {
       conn.end()
       conn.destroy()
     }
@@ -54,22 +43,23 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
 
   // reject promise handler
   var rejected = function (err) {
-    handleConn()
+    handleConn(true)
     return Promise.reject(err)
   }
 
   // resolve promise handler
   var resolved = function (val) {
-    handleConn()
+    handleConn(false)
     return Promise.resolve(val)
   }
 
   return new Promise(function (resolve, reject) {
+    var compiledCallBack = cmdCB(resolve, reject, conn)
     if (session) {
-      conn.sftp(cmdCB(resolve, reject))
+      conn.sftp(compiledCallBack)
     } else {
       conn.on('ready', function () {
-        conn.sftp(cmdCB(resolve, reject, conn))
+        conn.sftp(compiledCallBack)
       })
       conn.on('end', function () {
         reject(new Error('Connection closed'))
@@ -123,17 +113,13 @@ SFTPClient.prototype.ls = function ls (location, session) {
   // create the lsCmd callback for this.sftpCmd
   var lsCmd = function (resolve, reject) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.stat(location, function (err, stat) {
-        if (err) {
-          return reject(err)
-        }
+        if (err) { return reject(err) }
         var attrs = statToAttrs(stat)
         if (stat.isDirectory()) {
           sftp.readdir(location, function (err, list) {
-            if (err) { reject(err) }
+            if (err) { return reject(err) }
             resolve({ path: location, type: 'directory', attrs: attrs, entries: list })
           })
         } else if (stat.isFile()) {
@@ -159,13 +145,9 @@ SFTPClient.prototype.stat = function stat (location, session) {
   // create the lsCmd callback for this.sftpCmd
   var statCmd = function (resolve, reject) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.stat(location, function (err, stat) {
-        if (err) {
-          return reject(err)
-        }
+        if (err) { return reject(err) }
         var attrs = statToAttrs(stat)
         attrs.path = location
         if (stat.isDirectory()) {
@@ -193,17 +175,11 @@ SFTPClient.prototype.stat = function stat (location, session) {
 SFTPClient.prototype.getBuffer = function getBuffer (location, session) {
   var getBufferCmd = function (resolve, reject) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.open(location, 'r', function (err, handle) {
-        if (err) {
-          return reject(err)
-        }
+        if (err) { return reject(err) }
         sftp.fstat(handle, function (err, stat) {
-          if (err) {
-            return reject(err)
-          }
+          if (err) { return reject(err) }
           var bytes = stat.size
           var buffer = Buffer(bytes)
           if (bytes === 0) {
@@ -211,18 +187,13 @@ SFTPClient.prototype.getBuffer = function getBuffer (location, session) {
           }
           buffer.fill(0)
           var cb = function (err, readBytes, offsetBuffer, position) {
-            if (err) {
-              return reject(err)
-            }
+            if (err) { return reject(err) }
             position = position + readBytes
             bytes = bytes - readBytes
             if (bytes < 1) {
               sftp.close(handle, function (err) {
-                if (err) {
-                  reject(err)
-                } else {
-                  resolve(buffer)
-                }
+                if (err) { return reject(err) }
+                resolve(buffer)
               })
             } else {
               sftp.read(handle, buffer, position, bytes, position, cb)
@@ -247,25 +218,15 @@ SFTPClient.prototype.getBuffer = function getBuffer (location, session) {
 SFTPClient.prototype.putBuffer = function putBuffer (buffer, location, session) {
   var putBufferCmd = function (resolve, reject) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.open(location, 'w', function (err, handle) {
-        if (err) {
-          return reject(err)
-        }
+        if (err) { return reject(err) }
         sftp.write(handle, buffer, 0, buffer.length, 0, function (err) {
-          if (err) {
-            return reject(err)
-          } else {
-            sftp.close(handle, function (err) {
-              if (err) {
-                reject(err)
-              } else {
-                resolve(true)
-              }
-            })
-          }
+          if (err) { return reject(err) }
+          sftp.close(handle, function (err) {
+            if (err) { return reject(err) }
+            resolve(true)
+          })
         })
       })
     }
@@ -283,15 +244,10 @@ SFTPClient.prototype.putBuffer = function putBuffer (buffer, location, session) 
 SFTPClient.prototype.get = function get (remote, local, session) {
   var getCmd = function (resolve, reject) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.fastGet(remote, local, function (err) {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(true)
-        }
+        if (err) { return reject(err) }
+        resolve(true)
       })
     }
   }
@@ -308,15 +264,10 @@ SFTPClient.prototype.get = function get (remote, local, session) {
 SFTPClient.prototype.put = function put (local, remote, session) {
   var putCmd = function (resolve, reject) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.fastPut(local, remote, function (err) {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(true)
-        }
+        if (err) { return reject(err) }
+        resolve(true)
       })
     }
   }
@@ -332,15 +283,10 @@ SFTPClient.prototype.put = function put (local, remote, session) {
 SFTPClient.prototype.rm = function rm (location, session) {
   var rmCmd = function (resolve, reject) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.unlink(location, function (err) {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(true)
-        }
+        if (err) { return reject(err) }
+        resolve(true)
       })
     }
   }
@@ -357,15 +303,10 @@ SFTPClient.prototype.rm = function rm (location, session) {
 SFTPClient.prototype.mv = function rm (src, dest, session) {
   var mvCmd = function (resolve, reject) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.rename(src, dest, function (err) {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(true)
-        }
+        if (err) { return reject(err) }
+        resolve(true)
       })
     }
   }
@@ -381,15 +322,10 @@ SFTPClient.prototype.mv = function rm (src, dest, session) {
 SFTPClient.prototype.rmdir = function rmdir (path, session) {
   var rmdirCmd = function (resolve, reject) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.rmdir(path, function (err) {
-        if (err) {
-          return reject(err)
-        } else {
-          return resolve(true)
-        }
+        if (err) { return reject(err) }
+        return resolve(true)
       })
     }
   }
@@ -409,11 +345,8 @@ SFTPClient.prototype.mkdir = function mkdir (path, session) {
         return reject(err)
       }
       sftp.mkdir(path, function (err) {
-        if (err) {
-          return reject(err)
-        } else {
-          return resolve(true)
-        }
+        if (err) { return reject(err) }
+        return resolve(true)
       })
     }
   }
@@ -433,13 +366,9 @@ SFTPClient.prototype.getStream = function getStream (path, writableStream, sessi
       if (!writableStream.writable) {
         return reject(new Error('Stream must be a writable stream'))
       }
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.stat(path, function (err, stat) {
-        if (err) {
-          return reject(err)
-        }
+        if (err) { return reject(err) }
         var bytes = stat.size
         if (bytes > 0) {
           bytes -= 1
@@ -475,9 +404,7 @@ SFTPClient.prototype.putStream = function putStream (path, readableStream, sessi
       if (!readableStream.readable) {
         return reject(new Error('Stream must be a readable stream'))
       }
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       try {
         var stream = sftp.createWriteStream(path)
       } catch (err) {
@@ -487,10 +414,10 @@ SFTPClient.prototype.putStream = function putStream (path, readableStream, sessi
         readableStream.pipe(stream)
       })
       stream.on('finish', function () {
-        return resolve(true)
+        resolve(true)
       })
       stream.on('error', function (err) {
-        return reject(err)
+        reject(err)
       })
     }
   }
@@ -506,13 +433,9 @@ SFTPClient.prototype.putStream = function putStream (path, readableStream, sessi
 SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
   var createReadStreamCmd = function (resolve, reject, conn) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       sftp.stat(path, function (err, stat) {
-        if (err) {
-          return reject(err)
-        }
+        if (err) { return reject(err) }
         var bytes = stat.size
         if (bytes > 0) {
           bytes -= 1
@@ -522,19 +445,18 @@ SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
         } catch (err) {
           return reject(err)
         }
-        stream.on('end', function () {
+        stream.on('close', function () {
           // if there is no session we need to clean the connection
           if (!session) {
             conn.end()
             conn.destroy()
           }
         })
-        stream.on('error', function (err) {
+        stream.on('error', function () {
           if (!session) {
             conn.end()
             conn.destroy()
           }
-          return reject(err)
         })
         stream.on('readable', function () {
           resolve(stream)
@@ -542,7 +464,7 @@ SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
       })
     }
   }
-  return this.sftpCmd(createReadStreamCmd, session)
+  return this.sftpCmd(createReadStreamCmd, session, true)
 }
 
 /**
@@ -554,9 +476,7 @@ SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
 SFTPClient.prototype.createWriteStream = function createWriteStream (path, session) {
   var createWriteStreamCmd = function (resolve, reject, conn) {
     return function (err, sftp) {
-      if (err) {
-        return reject(err)
-      }
+      if (err) { return reject(err) }
       try {
         var stream = sftp.createWriteStream(path)
       } catch (err) {
@@ -574,10 +494,10 @@ SFTPClient.prototype.createWriteStream = function createWriteStream (path, sessi
           conn.end()
           conn.destroy()
         }
-        return reject(err)
+        reject(err)
       })
       stream.on('open', function () {
-        return resolve(stream)
+        resolve(stream)
       })
     }
   }
