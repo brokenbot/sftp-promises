@@ -181,7 +181,7 @@ SFTPClient.prototype.getBuffer = function getBuffer (location, session) {
         sftp.fstat(handle, function (err, stat) {
           if (err) { return reject(err) }
           var bytes = stat.size
-          var buffer = Buffer(bytes)
+          var buffer = Buffer.alloc(bytes)
           if (bytes === 0) {
             return resolve(buffer)
           }

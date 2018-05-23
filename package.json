@@ -36,5 +36,8 @@
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
     "standard": "^11.0.1"
+  },
+  "engines": {
+    "node": ">=4.5.0"
   }
 }

@@ -253,4 +253,3 @@ describe('rmdir(path)', function () {
     return sftp.rmdir('/noexistantdir').should.be.rejected
   })
 })
-
