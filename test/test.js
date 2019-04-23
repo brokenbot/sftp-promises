@@ -150,7 +150,7 @@ describe('putStream(path, readableStream)', function () {
   it('putStream("/tmp/test.dat", nonReadableStream) should reject', function () {
     return sftp.putStream('/tmp/test.dat', 'notastream').should.be.rejected
   })
-  it('putStream("/nonewritable/location", writableStream) should reject', function () {
+  it('putStream("/nonewritable/location", readStream) should reject', function () {
     var stream = fs.createReadStream('test/fixtures/test.dat')
     return sftp.putStream('/cantwritehere', stream).should.be.rejected
   })
