@@ -4,7 +4,7 @@
   "description": "SFTP Promise wrapper for ssh2 SFTP commands",
   "main": "index.js",
   "scripts": {
-    "test": "mocha",
+    "test": "mocha --exit",
     "coverage": "istanbul cover _mocha -- -R spec",
     "check-coverage": "istanbul check-coverage --statements 85 --branches 70 --functions 90 --lines 90",
     "report-coverage": "cat ./coverage/lcov.info | coveralls"
