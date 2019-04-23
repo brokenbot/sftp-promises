@@ -253,3 +253,12 @@ describe('rmdir(path)', function () {
     return sftp.rmdir('/noexistantdir').should.be.rejected
   })
 })
+
+describe('realpath(path)', function () {
+  it('should return string of the realpath', function () {
+    return sftp.realpath('.').should.be.fulfilled
+  })
+  it('pwd() should resolve with realpath(".")', function () {
+    return sftp.pwd().should.be.fulfilled
+  })
+})

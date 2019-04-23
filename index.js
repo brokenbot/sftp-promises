@@ -510,5 +510,33 @@ SFTPClient.prototype.createWriteStream = function createWriteStream (path, sessi
   return this.sftpCmd(createWriteStreamCmd, session, true)
 }
 
+/**
+ * get the realpath on remote server
+ * 
+ * @param {string} path - remote path
+ * @param {ssh2.Client} [session] - existing ssh2 connection
+ */
+SFTPClient.prototype.realpath = function realpath (path, session) {
+  var realpathCmd = function (resolve, reject, conn) {
+    return function (err, sftp) {
+      if (err) { return reject(err) }
+      sftp.realpath(path, function (err, rpath) {
+        if (err) { return reject(err) }
+        resolve(rpath)
+      }) 
+    }
+  }
+  return this.sftpCmd(realpathCmd, session)
+}
+
+/**
+ * get working directory on remote server - alias for SFTPClient.realpath('.', session)
+ * 
+ * @parm {ssh2.Client} [session] - existing ssh2 connection
+ */
+SFTPClient.prototype.pwd = function pwd (session) {
+  return this.realpath('.', session)
+}
+
 // export client
 module.exports = SFTPClient
