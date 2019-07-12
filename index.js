@@ -369,7 +369,7 @@ SFTPClient.prototype.mkdirp = function mkdirp (path, session) {
   var self = this
   var conn = session || new Client()
   session = session || false
-  persist = persist || false
+  persist = false
 
   // handle persisten connection
   var handleConn = function (failed) {
