@@ -242,7 +242,22 @@ describe('mkdir(path)', function () {
   })
 })
 
+describe('mkdirp(path)', function () {
+  it('mkdir("/tmp/testdir/that/is-deep") should resolve', function () {
+    return sftp.mkdirp('/tmp/testdir/that/is-deep').should.eventually.be.true
+  })
+  it('mkdir("/nonewritable") should reject', function () {
+    return sftp.mkdir('/nowriteabledir').should.be.rejected
+  })
+})
+
 describe('rmdir(path)', function () {
+  it('rmdir("/tmp/testdir/that/is-deep") should be true', function () {
+    return sftp.rmdir('/tmp/testdir/that/is-deep').should.eventually.be.true
+  })
+  it('rmdir("/tmp/testdir/that") should be true', function () {
+    return sftp.rmdir('/tmp/testdir/that').should.eventually.be.true
+  })
   it('rmdir("/tmp/testdir") should be true', function () {
     return sftp.rmdir('/tmp/testdir').should.eventually.be.true
   })

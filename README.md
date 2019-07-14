@@ -50,6 +50,7 @@ config options are the same as [ssh2](https://github.com/mscdex/ssh2) config opt
 **sftp.rm(\<string>location, [ssh2.Connection]session)** returns a promise with a boolean, true if successful  
 **sftp.mv(\<string>src, \<string>dest, [ssh2.Connection]session)** returns a promise with a boolean, true if successful 
 **sftp.mkdir(\<string>path, [ssh2.Connection]session)** returns a promise with a boolean, true if successful 
+**sftp.mkdirp(\<string>path, [ssh2.Connection]session)** returns a promise with a boolean, true if successful 
 **sftp.rmdir(\<string>path, [ssh2.Connection]session)** returns a promise with a boolean, true if successful 
 **sftp.getStream(\<string>path, <writableStream>writableStream, [ssh2.Connection]session)** returns a promise with a boolean, true if stream write completed  
 **sftp.putStream(\<string>path, <writableStream>writableStream, [ssh2.Connection]session)** returns a promise with a boolean, true is stream write completed  
@@ -60,7 +61,6 @@ config options are the same as [ssh2](https://github.com/mscdex/ssh2) config opt
 # ToDo
 * better testing of sessions
 * validate sftp session is actually a valid ssh session
-* mkdir recursive
 * rmdir recursive
 * ability to add options to be passed to underlying ssh2 connections
 * better documentation
