@@ -51,6 +51,14 @@ describe('SFTPClient()', function () {
     var Client = SFTPClient()
     return Client.stat('./').should.be.rejected
   })
+  it('execCmd with closed session should fail', function () {
+    return sftp.session(config).then((session) => {
+      var cmdTest = sftp.execCmd('ls',session).should.be.rejected
+      session.end()
+      session.destroy()
+      return cmdTest
+    })
+  })
 })
 
 describe('session(config)', function () {

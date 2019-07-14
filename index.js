@@ -512,6 +512,7 @@ SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
         })
         stream.on('readable', function () {
           resolve(stream)
+          stream.close()
         })
       })
     }
