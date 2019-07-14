@@ -105,7 +105,7 @@ SFTPClient.prototype.execCmd = function execCmd (command, session, persist) {
       } else {
         stream.on('exit', function (exitCode) {
           if (exitCode !== 0) {
-            reject('none zero exit code')
+            reject(new Error('none zero exit code'))
           } else {
             resolve(true)
           }

@@ -247,7 +247,7 @@ describe('mkdirp(path)', function () {
     return sftp.mkdirp('/tmp/testdir/that/is-deep').should.eventually.be.true
   })
   it('mkdir("/nonewritable") should reject', function () {
-    return sftp.mkdir('/nowriteabledir').should.be.rejected
+    return sftp.mkdirp('/nowriteabledir').should.be.rejected
   })
 })
 
