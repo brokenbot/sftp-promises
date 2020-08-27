@@ -28,12 +28,12 @@ SFTPClient.prototype.MODES = require('ssh2').SFTP_OPEN_MODE
 SFTPClient.prototype.CODES = require('ssh2').SFTP_STATUS_CODE
 
 /**
-* Creates connection and promise wrapper for sftp commands
+* Creates connection and promise wrapper for commands
 *
-* @param {callback} cmdCB - callback for sftp, takes connection, reject and resolve cmb_cb(con, reject,resolve)
+* @param {callback} cmdCB - callback for cmd, takes resolve, reject and connection cmb_cb(resolve,reject,con)
 * @param {ssh2.Client} [session] - existing ssh2 connection, optional
 */
-SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
+SFTPClient.prototype.cmd = function cmd (cmdCB, session, persist) {
   var self = this
   var conn = session || new Client()
   session = session || false
@@ -60,12 +60,11 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
   }
 
   return new Promise(function (resolve, reject) {
-    var compiledCallBack = cmdCB(resolve, reject, conn)
     if (session) {
-      conn.sftp(compiledCallBack)
+      cmdCB(resolve, reject, conn)
     } else {
       conn.on('ready', function () {
-        conn.sftp(compiledCallBack)
+        cmdCB(resolve, reject, conn)
       })
       conn.on('end', function () {
         reject(new Error('Connection closed'))
@@ -77,6 +76,43 @@ SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
     }
   // handle the persistent connection regardless of how promise fairs
   }).then(resolved, rejected)
+}
+
+/**
+* Creates connection and promise wrapper for sftp commands
+*
+* @param {callback} cmdCB - callback for sftp, takes resolve, reject and connection cmb_cb(resolve,reject,con)
+* @param {ssh2.Client} [session] - existing ssh2 connection, optional
+*/
+SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
+  return this.cmd(function (resolve, reject, conn) {
+    var compiledCallBack = cmdCB(resolve, reject, conn)
+    conn.sftp(compiledCallBack)
+  }, session, persist)
+}
+
+/**
+* Creates connection and promise wrapper for exec commands
+*
+* @param {string} command - command to exec
+* @param {ssh2.Client} [session] - existing ssh2 connection, optional
+*/
+SFTPClient.prototype.execCmd = function execCmd (command, session, persist) {
+  return this.cmd(function (resolve, reject, conn) {
+    conn.exec(command, function (err, stream) {
+      if (err) {
+        reject(err)
+      } else {
+        stream.on('exit', function (exitCode) {
+          if (exitCode !== 0) {
+            reject(new Error('none zero exit code'))
+          } else {
+            resolve(true)
+          }
+        })
+      }
+    })
+  }, session, persist)
 }
 
 /**
@@ -94,12 +130,12 @@ SFTPClient.prototype.session = function session (conf) {
       conn.removeAllListeners()
       resolve(conn)
     })
-    .on('end', function () {
-      reject(new Error('Connection closed'))
-    })
-    .on('error', function (err) {
-      reject(err)
-    })
+      .on('end', function () {
+        reject(new Error('Connection closed'))
+      })
+      .on('error', function (err) {
+        reject(err)
+      })
     try {
       conn.connect(conf)
     } catch (err) {
@@ -360,6 +396,16 @@ SFTPClient.prototype.mkdir = function mkdir (path, session) {
 }
 
 /**
+ *  makes a directory recursively
+ *
+ * @param {string} path - remote directory to be created
+ * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+ */
+SFTPClient.prototype.mkdirp = function mkdirp (path, session) {
+  return this.execCmd('mkdir -p "' + path + '"', session)
+}
+
+/**
  * stream file contents from remote file
  *
  * @parm {string} path - remote file path
@@ -466,6 +512,7 @@ SFTPClient.prototype.createReadStream = function getReadStream (path, session) {
         })
         stream.on('readable', function () {
           resolve(stream)
+          stream.close()
         })
       })
     }
