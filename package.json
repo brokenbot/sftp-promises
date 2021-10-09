@@ -1,6 +1,6 @@
 {
   "name": "sftp-promises",
-  "version": "1.7.1",
+  "version": "1.8.0",
   "description": "SFTP Promise wrapper for ssh2 SFTP commands",
   "main": "index.js",
   "scripts": {
@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/brokenbot/sftp-promises#readme",
   "dependencies": {
-    "ssh2": "^0.8.2",
+    "ssh2": "^1.4.0",
     "ssh2-streams": "^0.4.2"
   },
   "devDependencies": {
@@ -35,8 +35,8 @@
     "coveralls": "^3.0.3",
     "istanbul": "^0.4.5",
     "jsdoc": "^3.6.4",
-    "mocha": "^7.1.1",
-    "standard": "^12.0.1"
+    "mocha": "^9.1.2",
+    "standard": "^16.0.4"
   },
   "engines": {
     "node": ">=4.5.0"
