@@ -26,16 +26,16 @@
   },
   "homepage": "https://github.com/brokenbot/sftp-promises#readme",
   "dependencies": {
+    "coveralls-next": "^4.2.1",
     "ssh2": "^1.4.0",
     "ssh2-streams": "^0.4.2"
   },
   "devDependencies": {
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "coveralls": "^3.0.3",
     "istanbul": "^0.4.5",
-    "jsdoc": "^3.6.4",
-    "mocha": "^9.1.2",
+    "jsdoc": "^4.0.4",
+    "mocha": "^11.1.0",
     "standard": "^16.0.4"
   },
   "engines": {
