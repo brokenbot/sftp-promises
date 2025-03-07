@@ -21,8 +21,8 @@ jobs:
 
     - name: Start SSH server
       run: | 
-       - sudo service ssh start
-       - sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
+        sudo service ssh start
+        sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
 
     - name: npm install
       run: npm install
