@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --exit",
-    "coverage": "istanbul cover _mocha -- --exit -R spec",
-    "check-coverage": "istanbul check-coverage --statements 85 --branches 70 --functions 90 --lines 90",
+    "coverage": "nyc cover _mocha -- --exit -R spec",
+    "check-coverage": "nyc check-coverage --statements 85 --branches 70 --functions 90 --lines 90",
     "docs": "jsdoc -d docs README.md index.js",
     "eslint": "eslint --ext *.js"
   },
