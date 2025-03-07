@@ -20,7 +20,9 @@ jobs:
       run: sudo apt-get update && sudo apt-get install -y openssh-server
 
     - name: Start SSH server
-      run: sudo service ssh start
+      run: | 
+       - sudo service ssh start
+       - sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
 
     - name: npm install
       run: npm install
