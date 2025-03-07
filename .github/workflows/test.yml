@@ -16,16 +16,14 @@ jobs:
       with:
         node-version: 16.x
 
-    - name: Install SSH server
-      run: sudo apt-get update && sudo apt-get install -y openssh-server
-
-    - name: Start SSH server
-      run: | 
-        sudo service ssh start
-        sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
-
     - name: Install Dependencies
       run: npm install
+
+    - name: Setup SSH server for tests
+      run: | 
+        sudo apt-get update && sudo apt-get install -y openssh-server
+        sudo service ssh start
+        sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
         
     - name: Run Tests
       run: npm test
