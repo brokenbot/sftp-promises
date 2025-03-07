@@ -24,11 +24,16 @@ jobs:
         sudo service ssh start
         sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
 
-    - name: npm install
+    - name: Install Dependencies
       run: npm install
         
-    - name: npm test
+    - name: Run Tests
       run: npm test
+
+    - name: Coverage
+      run: |
+        npm run coverage
+        npm run check-coverage
 
     - name: Coveralls
       uses: coverallsapp/github-action@v2
