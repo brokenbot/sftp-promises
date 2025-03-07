@@ -1,6 +1,9 @@
 on:
-  tags:
-    - v*
+  push:
+    branches:
+      - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 name: Publish
 
