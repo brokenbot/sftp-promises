@@ -1,7 +1,10 @@
 on:
   pull_request:
     branches:
-      - main
+      - master
+    paths:
+      - '**.js'
+      - '**.json'
 
 name: Test 
 
@@ -12,7 +15,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Run ESLint
       run: eslint . --ext .js,.ts
 
