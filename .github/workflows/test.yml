@@ -1,11 +1,13 @@
-on: ["push", "pull_request"]
+on:
+  pull_request:
+    branches:
+      - main
 
 name: Test 
 
 jobs:
-
-  build:
-    name: Build
+  test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
 
@@ -20,18 +22,13 @@ jobs:
       run: npm install
 
     - name: Setup SSH server for tests
-      run: | 
-        sudo apt-get update && sudo apt-get install -y openssh-server
-        sudo service ssh start
-        sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
+      - run: sudo apt-get update && sudo apt-get install -y openssh-server
+      - run: sudo service ssh start
+      - run: sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
         
     - name: Run Tests
       run: npm test
 
     - name: Coverage
-      run: |
-        npm run coverage
-        npm run check-coverage
-
-    - name: Coveralls
-      uses: coverallsapp/github-action@v2
+      - run: npm run coverage
+      - run: npm run check-coverage
