@@ -1,0 +1,42 @@
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '**.js'
+      - '**.json'
+
+name: Test 
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Use Node.js 16.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16.x
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Run ESLint
+      run: eslint . --ext .js,.ts
+
+    - name: Setup SSH server for tests
+      run: |
+        sudo apt-get update && sudo apt-get install -y openssh-server
+        sudo service ssh start
+        sudo useradd -m -p $(openssl passwd -1 vagrant) vagrant
+        
+    - name: Run Tests
+      run: npm test
+
+    - name: Coverage
+      run: |
+        npm run coverage
+        npm run check-coverage

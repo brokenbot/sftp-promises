@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --exit",
-    "coverage": "istanbul cover _mocha -- --exit -R spec",
-    "check-coverage": "istanbul check-coverage --statements 85 --branches 70 --functions 90 --lines 90",
-    "report-coverage": "cat ./coverage/lcov.info | coveralls"
+    "coverage": "nyc cover _mocha -- --exit -R spec",
+    "check-coverage": "nyc check-coverage --statements 85 --branches 70 --functions 90 --lines 90",
+    "docs": "jsdoc -d docs README.md index.js",
+    "eslint": "eslint --ext *.js"
   },
   "repository": {
     "type": "git",
@@ -30,15 +31,17 @@
     "ssh2-streams": "^0.4.2"
   },
   "devDependencies": {
+    "@eslint/js": "^9.21.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "coveralls": "^3.0.3",
-    "istanbul": "^0.4.5",
-    "jsdoc": "^3.6.4",
-    "mocha": "^9.1.2",
+    "eslint": "^9.21.0",
+    "globals": "^16.0.0",
+    "jsdoc": "^4.0.4",
+    "mocha": "^11.1.0",
+    "nyc": "^17.1.0",
     "standard": "^16.0.4"
   },
   "engines": {
-    "node": ">=4.5.0"
+    "node": ">=10.16.0"
   }
 }
