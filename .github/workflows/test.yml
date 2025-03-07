@@ -9,18 +9,17 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '16.x'
-    - run: eslint . --ext .js,.ts
+    - name: Checkout
+      uses: actions/checkout@v4
+      - run: eslint . --ext .js,.ts
 
   test:
     name: Test
     runs-on: ubuntu-latest
-    steps:
 
+    steps:
     - uses: actions/checkout@v4
 
     - name: Use Node.js 16.x
@@ -32,9 +31,10 @@ jobs:
       run: npm install
 
     - name: Setup SSH server for tests
-      - run: sudo apt-get update && sudo apt-get install -y openssh-server
-      - run: sudo service ssh start
-      - run: sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
+      run: 
+        - sudo apt-get update && sudo apt-get install -y openssh-server
+        - sudo service ssh start
+        - sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
         
     - name: Run Tests
       run: npm test
