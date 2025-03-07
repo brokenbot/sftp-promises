@@ -9,16 +9,6 @@ on:
 name: Test 
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Run ESLint
-      run: eslint . --ext .js,.ts
-
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -33,6 +23,9 @@ jobs:
 
     - name: Install Dependencies
       run: npm install
+
+    - name: Run ESLint
+      run: eslint . --ext .js,.ts
 
     - name: Setup SSH server for tests
       run: |
