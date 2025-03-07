@@ -11,9 +11,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-      - run: eslint . --ext .js,.ts
+    - uses: actions/checkout@v4
+    
+    - name: Run ESLint
+      run: eslint . --ext .js,.ts
 
   test:
     name: Test
@@ -31,14 +32,15 @@ jobs:
       run: npm install
 
     - name: Setup SSH server for tests
-      run: 
-        - sudo apt-get update && sudo apt-get install -y openssh-server
-        - sudo service ssh start
-        - sudo useradd -m -p `openssl passwd -1 vagrant` vagrant
+      run: |
+        sudo apt-get update && sudo apt-get install -y openssh-server
+        sudo service ssh start
+        sudo useradd -m -p $(openssl passwd -1 vagrant) vagrant
         
     - name: Run Tests
       run: npm test
 
     - name: Coverage
-      - run: npm run coverage
-      - run: npm run check-coverage
+      run: |
+        npm run coverage
+        npm run check-coverage
