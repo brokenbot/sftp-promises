@@ -26,7 +26,6 @@
   },
   "homepage": "https://github.com/brokenbot/sftp-promises#readme",
   "dependencies": {
-    "coveralls-next": "^4.2.1",
     "ssh2": "^1.4.0",
     "ssh2-streams": "^0.4.2"
   },
