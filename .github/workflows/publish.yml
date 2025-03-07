@@ -1,5 +1,5 @@
 on:
-  tag:
+  tags:
     - v*
 
 name: Publish
