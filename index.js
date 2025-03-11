@@ -1,9 +1,11 @@
+const { Buffer } = require('node:buffer')
+
 var Client = require('ssh2').Client
 
 var statToAttrs = function (stats) {
   var attrs = {}
   for (var attr in stats) {
-    if (stats.hasOwnProperty(attr)) {
+    if (Object.prototype.hasOwnProperty.call(stats, attr)) {
       attrs[attr] = stats[attr]
     }
   }
@@ -517,7 +519,7 @@ SFTPClient.prototype.createWriteStream = function createWriteStream (path, sessi
  * @param {ssh2.Client} [session] - existing ssh2 connection
  */
 SFTPClient.prototype.realpath = function realpath (path, session) {
-  var realpathCmd = function (resolve, reject, conn) {
+  var realpathCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) { return reject(err) }
       sftp.realpath(path, function (err, rpath) {
