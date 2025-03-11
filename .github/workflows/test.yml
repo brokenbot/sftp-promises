@@ -25,7 +25,7 @@ jobs:
       run: npm install
 
     - name: Run ESLint
-      run: npm eslint . --ext .js,.ts
+      run: npm run eslint . --ext .js,.ts
 
     - name: Setup SSH server for tests
       run: |
