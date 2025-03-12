@@ -10,7 +10,7 @@ var should = chai.should() // eslint-disable-line no-unused-vars
 
 var config = {
   host: process.env.SFTPHOST || 'localhost',
-  port: process.env.SFTPPORT || 22,
+  port: process.env.SFTPPORT || 2200,
   username: process.env.SFTPUSER || 'vagrant',
   password: process.env.SFTPPASS || 'vagrant'
 }

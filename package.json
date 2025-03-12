@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --exit",
-    "coverage": "nyc _mocha -- --exit -R spec",
-    "report-coverage": "nyc report --reporter=text-lcov",
+    "coverage": "nyc mocha -- --exit -R spec",
+    "report-coverage": "nyc report --reporterlcov",
     "check-coverage": "nyc check-coverage --statements 85 --branches 70 --functions 90 --lines 90",
     "docs": "jsdoc -d docs README.md index.js",
     "eslint": "eslint --ext *.js"
