@@ -39,5 +39,17 @@ jobs:
     - name: Check Coverage
       run: npm run check-coverage
     
-    - name: Run Coveralls
-      run: npm run coveralls
+
+  coveralls:
+    name: Coveralls
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: npm install, make test-coverage
+      run: |
+        npm install
+        npm coverage
+
+    - name: Coveralls
+      uses: coverallsapp/github-action@v2
