@@ -143,8 +143,6 @@ describe('getStream(path, writableStream)', function () {
 })
 
 describe('putStream(path, readableStream)', function () {
-  this.timeout(30000)
-
   it('putStream("/tmp/test-stream.dat", readStream) should be true', function () {
     var stream = fs.createReadStream('test/fixtures/test.dat')
     return sftp.putStream('/tmp/test-stream.dat', stream).should.eventually.be.true

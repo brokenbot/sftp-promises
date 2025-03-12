@@ -418,10 +418,14 @@ SFTPClient.prototype.putStream = function putStream (path, readableStream, sessi
       } catch (err) {
         return reject(err)
       }
-      stream.on('open', function () {
+      stream.on('ready', function () {
+        console.log('stream ready')
         readableStream.pipe(stream)
       })
-      stream.on('finish', function () {
+      readableStream.on('error', function () {
+        reject(err)
+      })
+      stream.on('close', function () {
         resolve(true)
       })
       stream.on('error', function (err) {
