@@ -32,11 +32,8 @@ jobs:
         sudo apt-get update && sudo apt-get install -y openssh-server
         sudo service ssh start
         sudo useradd -m -p $(openssl passwd -1 vagrant) vagrant
-        
-    - name: Run Tests
-      run: npm test
 
-    - name: Coverage
+    - name: Run Tests with Coverage
       run: |
         npm run coverage
         npm run check-coverage
