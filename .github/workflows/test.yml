@@ -34,6 +34,7 @@ jobs:
         sudo useradd -m -p $(openssl passwd -1 vagrant) vagrant
 
     - name: Run Tests with Coverage
-      run: |
-        npm run coverage
-        npm run check-coverage
+      run: npm run coverage
+    
+    - name: Check Coverage
+      run: npm run check-coverage
