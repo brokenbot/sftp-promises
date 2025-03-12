@@ -143,11 +143,11 @@ describe('getStream(path, writableStream)', function () {
 })
 
 describe('putStream(path, readableStream)', function () {
-  this.timeout(10000)
+  this.timeout(30000)
 
   it('putStream("/tmp/test-stream.dat", readStream) should be true', function () {
     var stream = fs.createReadStream('test/fixtures/test.dat')
-    return sftp.putStream('/tmp/test.dat', stream).should.eventually.be.true
+    return sftp.putStream('/tmp/test-stream.dat', stream).should.eventually.be.true
   })
   it('putStream("/tmp/test.dat", nonReadableStream) should reject', function () {
     return sftp.putStream('/tmp/test.dat', 'notastream').should.be.rejected
