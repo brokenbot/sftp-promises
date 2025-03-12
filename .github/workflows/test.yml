@@ -38,3 +38,6 @@ jobs:
     
     - name: Check Coverage
       run: npm run check-coverage
+    
+    - name: Run Coveralls
+      run: npm run coveralls
