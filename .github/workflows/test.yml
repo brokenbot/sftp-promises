@@ -57,6 +57,7 @@ jobs:
       run: |
         npm install
         npm run coverage
+        npm run report-coverage
 
     - name: Coveralls
       uses: coverallsapp/github-action@v2
