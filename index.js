@@ -3,7 +3,7 @@ const { Client, SFTP_OPEN_MODE, SFTP_STATUS_CODE } = require('ssh2')
 
 /**
  * Convert stats object to attributes object
- * 
+ *
  * @private
  * @param {Object} stats - Stats object from sftp.stat
  * @returns {Object} Attributes object
@@ -42,7 +42,7 @@ class SFTPClient {
   sftpCmd (cmdCB, session = false, persist = false) {
     const conn = session || new Client()
 
-    // handle persisten connection
+    // handle persistent connection
     const handleConn = function (failed) {
       if (!session && (!persist || failed)) {
         conn.end()
@@ -81,8 +81,6 @@ class SFTPClient {
     // handle the persistent connection regardless of how promise fairs
     }).then(resolved, rejected)
   }
-
-
   /**
    * Creates a new ssh2 session
    *
@@ -525,7 +523,7 @@ class SFTPClient {
 
   /**
    * Get the realpath on remote server
-   * 
+   *
    * @param {string} path - remote path
    * @param {ssh2.Client} [session] - existing ssh2 connection
    * @returns {Promise<string>} Promise with resolved path
@@ -537,7 +535,7 @@ class SFTPClient {
         sftp.realpath(path, function (err, rpath) {
           if (err) { return reject(err) }
           resolve(rpath)
-        }) 
+        })
       }
     }
     return this.sftpCmd(realpathCmd, session)
@@ -545,7 +543,7 @@ class SFTPClient {
 
   /**
    * Get working directory on remote server - alias for SFTPClient.realpath('.', session)
-   * 
+   *
    * @param {ssh2.Client} [session] - existing ssh2 connection
    * @returns {Promise<string>} Promise with current working directory path
    */
