@@ -1,10 +1,9 @@
 const { Buffer } = require('node:buffer')
+const { Client, SFTP_OPEN_MODE, SFTP_STATUS_CODE } = require('ssh2')
 
-var Client = require('ssh2').Client
-
-var statToAttrs = function (stats) {
+const statToAttrs = function (stats) {
   var attrs = {}
-  for (var attr in stats) {
+  for (const attr in stats) {
     if (Object.prototype.hasOwnProperty.call(stats, attr)) {
       attrs[attr] = stats[attr]
     }
@@ -18,161 +17,155 @@ var statToAttrs = function (stats) {
  * @constructor
  * @param {*} config
  */
-function SFTPClient (config) {
-  if (!(this instanceof SFTPClient)) {
-    return new SFTPClient(config)
+class SFTPClient {
+  constructor(config = {}) {
+    this.config = config
+    this.MODES = SFTP_OPEN_MODE
+    this.CODES = SFTP_STATUS_CODE
   }
 
-  this.config = config || {}
-}
+  /**
+  * Creates connection and promise wrapper for sftp commands
+  *
+  * @param {callback} cmdCB - callback for sftp, takes connection, reject and resolve cmb_cb(con, reject,resolve)
+  * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+  */
+  sftpCmd (cmdCB, session = false, persist = false) {
+    const conn = session || new Client()
 
-SFTPClient.prototype.MODES = require('ssh2').SFTP_OPEN_MODE
-SFTPClient.prototype.CODES = require('ssh2').SFTP_STATUS_CODE
-
-/**
-* Creates connection and promise wrapper for sftp commands
-*
-* @param {callback} cmdCB - callback for sftp, takes connection, reject and resolve cmb_cb(con, reject,resolve)
-* @param {ssh2.Client} [session] - existing ssh2 connection, optional
-*/
-SFTPClient.prototype.sftpCmd = function sftpCmd (cmdCB, session, persist) {
-  var self = this
-  var conn = session || new Client()
-  session = session || false
-  persist = persist || false
-
-  // handle persisten connection
-  var handleConn = function (failed) {
-    if (!session && (!persist || failed)) {
-      conn.end()
-      conn.destroy()
+    // handle persisten connection
+    const handleConn = function (failed) {
+      if (!session && (!persist || failed)) {
+        conn.end()
+        conn.destroy()
+      }
     }
-  }
 
-  // reject promise handler
-  var rejected = function (err) {
-    handleConn(true)
-    return Promise.reject(err)
-  }
+    // reject promise handler
+    const rejected = function (err) {
+      handleConn(true)
+      return Promise.reject(err)
+    }
 
-  // resolve promise handler
-  var resolved = function (val) {
-    handleConn(false)
-    return Promise.resolve(val)
-  }
+    // resolve promise handler
+    const resolved = function (val) {
+      handleConn(false)
+      return Promise.resolve(val)
+    }
 
-  return new Promise(function (resolve, reject) {
-    var compiledCallBack = cmdCB(resolve, reject, conn)
-    if (session) {
-      conn.sftp(compiledCallBack)
-    } else {
-      conn.on('ready', function () {
+    return new Promise(function (resolve, reject) {
+      const compiledCallBack = cmdCB(resolve, reject, conn)
+      if (session) {
         conn.sftp(compiledCallBack)
+      } else {
+        conn.on('ready', function () {
+          conn.sftp(compiledCallBack)
+        })
+        conn.on('end', function () {
+          reject(new Error('Connection closed'))
+        })
+        conn.on('error', function (err) {
+          reject(err)
+        })
+        conn.connect(this.config)
+      }
+    // handle the persistent connection regardless of how promise fairs
+    }).then(resolved, rejected)
+  }
+
+
+  /**
+   * creates a new ssh2 session, short cut for
+   * sshClient = require('ssh2')sshClient
+   * session = new SFTPClient(config)
+   *
+   * @params {Object} config - valid ssh2 config
+   * @return {Promise} returns a Promse with an ssh2 connection object if resovled
+   */
+  session (conf) {
+    return new Promise(function (resolve, reject) {
+      const conn = new Client()
+      conn.on('ready', function () {
+        conn.removeAllListeners()
+        resolve(conn)
       })
-      conn.on('end', function () {
+      .on('end', function () {
         reject(new Error('Connection closed'))
       })
-      conn.on('error', function (err) {
+      .on('error', function (err) {
         reject(err)
       })
-      conn.connect(self.config)
-    }
-  // handle the persistent connection regardless of how promise fairs
-  }).then(resolved, rejected)
-}
-
-/**
- * creates a new ssh2 session, short cut for
- * sshClient = require('ssh2')sshClient
- * session = new SFTPClient(config)
- *
- * @params {Object} config - valid ssh2 config
- * @return {Promise} returns a Promse with an ssh2 connection object if resovled
- */
-SFTPClient.prototype.session = function session (conf) {
-  return new Promise(function (resolve, reject) {
-    var conn = new Client()
-    conn.on('ready', function () {
-      conn.removeAllListeners()
-      resolve(conn)
+      try {
+        conn.connect(conf)
+      } catch (err) {
+        reject(err)
+      }
     })
-    .on('end', function () {
-      reject(new Error('Connection closed'))
-    })
-    .on('error', function (err) {
-      reject(err)
-    })
-    try {
-      conn.connect(conf)
-    } catch (err) {
-      reject(err)
-    }
-  })
-}
-
-/**
- * unix ls -l style return
- *
- * @param {string} path - on filesystem to stat
- * @param {ssh2.Client} [session] - existing ssh2 connection, optional
- * @return {Promise} Promise with object describing path
- */
-SFTPClient.prototype.ls = function ls (location, session) {
-  // create the lsCmd callback for this.sftpCmd
-  var lsCmd = function (resolve, reject) {
-    return function (err, sftp) {
-      if (err) { return reject(err) }
-      sftp.stat(location, function (err, stat) {
-        if (err) { return reject(err) }
-        var attrs = statToAttrs(stat)
-        if (stat.isDirectory()) {
-          sftp.readdir(location, function (err, list) {
-            if (err) { return reject(err) }
-            resolve({ path: location, type: 'directory', attrs: attrs, entries: list })
-          })
-        } else if (stat.isFile()) {
-          resolve({ path: location, type: 'file', attrs: attrs })
-        } else {
-          resolve({ path: location, type: 'other', attrs: attrs })
-        }
-      })
-    }
   }
-  // return the value of the command
-  return this.sftpCmd(lsCmd, session)
-}
 
-/**
- * stat a file or directory
- *
- * @param {string} path - on filesystem to stat
- * @param {ssh2.Client} [session] - existing ssh2 connection, optional
- * @return {Promise} Promise with object describing path
- */
-SFTPClient.prototype.stat = function stat (location, session) {
-  // create the lsCmd callback for this.sftpCmd
-  var statCmd = function (resolve, reject) {
-    return function (err, sftp) {
-      if (err) { return reject(err) }
-      sftp.stat(location, function (err, stat) {
+  /**
+   * unix ls -l style return
+   *
+   * @param {string} path - on filesystem to stat
+   * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+   * @return {Promise} Promise with object describing path
+   */
+  ls (location, session) {
+    // create the lsCmd callback for this.sftpCmd
+    const lsCmd = function (resolve, reject) {
+      return function (err, sftp) {
         if (err) { return reject(err) }
-        var attrs = statToAttrs(stat)
-        attrs.path = location
-        if (stat.isDirectory()) {
-          attrs.type = 'directory'
-        } else if (stat.isFile()) {
-          attrs.type = 'file'
-        } else {
-          attrs.type = 'other'
-        }
-        resolve(attrs)
-      })
+        sftp.stat(location, function (err, stat) {
+          if (err) { return reject(err) }
+          const attrs = statToAttrs(stat)
+          if (stat.isDirectory()) {
+            sftp.readdir(location, function (err, list) {
+              if (err) { return reject(err) }
+              resolve({ path: location, type: 'directory', attrs: attrs, entries: list })
+            })
+          } else if (stat.isFile()) {
+            resolve({ path: location, type: 'file', attrs: attrs })
+          } else {
+            resolve({ path: location, type: 'other', attrs: attrs })
+          }
+        })
+      }
     }
+    // return the value of the command
+    return this.sftpCmd(lsCmd, session)
   }
-  // return the value of the command
-  return this.sftpCmd(statCmd, session)
-}
 
+  /**
+   * stat a file or directory
+   *
+   * @param {string} path - on filesystem to stat
+   * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+   * @return {Promise} Promise with object describing path
+   */
+  stat (location, session) {
+    // create the lsCmd callback for this.sftpCmd
+    const statCmd = function (resolve, reject) {
+      return function (err, sftp) {
+        if (err) { return reject(err) }
+        sftp.stat(location, function (err, stat) {
+          if (err) { return reject(err) }
+          const attrs = statToAttrs(stat)
+          attrs.path = location
+          if (stat.isDirectory()) {
+            attrs.type = 'directory'
+          } else if (stat.isFile()) {
+            attrs.type = 'file'
+          } else {
+            attrs.type = 'other'
+          }
+          resolve(attrs)
+        })
+      }
+    }
+    // return the value of the command
+    return this.sftpCmd(statCmd, session)
+  }
+}
 /**
  * get remote file contents into a Buffer
  *
