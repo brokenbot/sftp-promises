@@ -44,7 +44,7 @@ class SFTPClient {
     const conn = session || new Client()
 
     // handle persistent connection
-    const handleConn = function (failed) {
+    const handleConn = (failed) => {
       if (!session && (!persist || failed)) {
         conn.end()
         conn.destroy()
@@ -52,29 +52,29 @@ class SFTPClient {
     }
 
     // reject promise handler
-    const rejected = function (err) {
+    const rejected = (err) => {
       handleConn(true)
       return Promise.reject(err)
     }
 
     // resolve promise handler
-    const resolved = function (val) {
+    const resolved = (val) => {
       handleConn(false)
       return Promise.resolve(val)
     }
 
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       const compiledCallBack = cmdCB(resolve, reject, conn)
       if (session) {
         conn.sftp(compiledCallBack)
       } else {
-        conn.on('ready', function () {
+        conn.on('ready', () => {
           conn.sftp(compiledCallBack)
         })
-        conn.on('end', function () {
+        conn.on('end', () => {
           reject(new Error('Connection closed'))
         })
-        conn.on('error', function (err) {
+        conn.on('error', (err) => {
           reject(err)
         })
         conn.connect(this.config)
@@ -89,16 +89,16 @@ class SFTPClient {
    * @returns {Promise} returns a Promise with an ssh2 connection object if resolved
    */
   session (conf) {
-    return new Promise(function (resolve, reject) {
+    return new Promise((resolve, reject) => {
       const conn = new Client()
-      conn.on('ready', function () {
+      conn.on('ready', () => {
         conn.removeAllListeners()
         resolve(conn)
       })
-      .on('end', function () {
+      .on('end', () => {
         reject(new Error('Connection closed'))
       })
-      .on('error', function (err) {
+      .on('error', (err) => {
         reject(err)
       })
       try {
@@ -118,14 +118,14 @@ class SFTPClient {
    */
   ls (location, session) {
     // create the lsCmd callback for this.sftpCmd
-    const lsCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const lsCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.stat(location, function (err, stat) {
+        sftp.stat(location, (err, stat) => {
           if (err) { return reject(err) }
           const attrs = statToAttrs(stat)
           if (stat.isDirectory()) {
-            sftp.readdir(location, function (err, list) {
+            sftp.readdir(location, (err, list) => {
               if (err) { return reject(err) }
               resolve({ path: location, type: 'directory', attrs: attrs, entries: list })
             })
@@ -150,10 +150,10 @@ class SFTPClient {
    */
   stat (location, session) {
     // create the lsCmd callback for this.sftpCmd
-    const statCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const statCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.stat(location, function (err, stat) {
+        sftp.stat(location, (err, stat) => {
           if (err) { return reject(err) }
           const attrs = statToAttrs(stat)
           attrs.path = location
@@ -180,12 +180,12 @@ class SFTPClient {
    * @returns {Promise<Buffer>} Promise with Buffer on resolve
    */
   getBuffer(location, session) {
-    const getBufferCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const getBufferCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.open(location, 'r', function (err, handle) {
+        sftp.open(location, 'r', (err, handle) => {
           if (err) { return reject(err) }
-          sftp.fstat(handle, function (err, stat) {
+          sftp.fstat(handle, (err, stat) => {
             if (err) { return reject(err) }
             let bytes = stat.size
             const buffer = Buffer.alloc(bytes)
@@ -193,12 +193,12 @@ class SFTPClient {
               return resolve(buffer)
             }
             buffer.fill(0)
-            const cb = function (err, readBytes, offsetBuffer, position) {
+            const cb = (err, readBytes, offsetBuffer, position) => {
               if (err) { return reject(err) }
               position = position + readBytes
               bytes = bytes - readBytes
               if (bytes < 1) {
-                sftp.close(handle, function (err) {
+                sftp.close(handle, (err) => {
                   if (err) { return reject(err) }
                   resolve(buffer)
                 })
@@ -223,14 +223,14 @@ class SFTPClient {
    * @returns {Promise<boolean>} Promise with boolean true if transfer was successful
    */
   putBuffer(buffer, location, session) {
-    const putBufferCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const putBufferCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.open(location, 'w', function (err, handle) {
+        sftp.open(location, 'w', (err, handle) => {
           if (err) { return reject(err) }
-          sftp.write(handle, buffer, 0, buffer.length, 0, function (err) {
+          sftp.write(handle, buffer, 0, buffer.length, 0, (err) => {
             if (err) { return reject(err) }
-            sftp.close(handle, function (err) {
+            sftp.close(handle, (err) => {
               if (err) { return reject(err) }
               resolve(true)
             })
@@ -250,10 +250,10 @@ class SFTPClient {
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
   get(remote, local, session) {
-    const getCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const getCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.fastGet(remote, local, function (err) {
+        sftp.fastGet(remote, local, (err) => {
           if (err) { return reject(err) }
           resolve(true)
         })
@@ -271,10 +271,10 @@ class SFTPClient {
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
   put(local, remote, session) {
-    const putCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const putCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.fastPut(local, remote, function (err) {
+        sftp.fastPut(local, remote, (err) => {
           if (err) { return reject(err) }
           resolve(true)
         })
@@ -291,10 +291,10 @@ class SFTPClient {
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
   rm(location, session) {
-    const rmCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const rmCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.unlink(location, function (err) {
+        sftp.unlink(location, (err) => {
           if (err) { return reject(err) }
           resolve(true)
         })
@@ -312,10 +312,10 @@ class SFTPClient {
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
   mv(src, dest, session) {
-    const mvCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const mvCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.rename(src, dest, function (err) {
+        sftp.rename(src, dest, (err) => {
           if (err) { return reject(err) }
           resolve(true)
         })
@@ -332,10 +332,10 @@ class SFTPClient {
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
   rmdir(path, session) {
-    const rmdirCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const rmdirCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.rmdir(path, function (err) {
+        sftp.rmdir(path, (err) => {
           if (err) { return reject(err) }
           return resolve(true)
         })
@@ -352,10 +352,10 @@ class SFTPClient {
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
   mkdir(path, session) {
-    const mkdirCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const mkdirCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.mkdir(path, function (err) {
+        sftp.mkdir(path, (err) => {
           if (err) { return reject(err) }
           return resolve(true)
         })
@@ -373,13 +373,13 @@ class SFTPClient {
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
   getStream(path, writableStream, session) {
-    const getStreamCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const getStreamCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (!writableStream.writable) {
           return reject(new Error('Stream must be a writable stream'))
         }
         if (err) { return reject(err) }
-        sftp.stat(path, function (err, stat) {
+        sftp.stat(path, (err, stat) => {
           if (err) { return reject(err) }
           let bytes = stat.size
           if (bytes > 0) {
@@ -388,10 +388,10 @@ class SFTPClient {
           try {
             const stream = sftp.createReadStream(path, {start: 0, end: bytes})
             stream.pipe(writableStream)
-            stream.on('end', function () {
+            stream.on('end', () => {
               resolve(true)
             })
-            stream.on('error', function (err) {
+            stream.on('error', (err) => {
               reject(err)
             })
           } catch (err) {
@@ -412,24 +412,24 @@ class SFTPClient {
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
   putStream(path, readableStream, session) {
-    const putStreamCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const putStreamCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (!readableStream.readable) {
           return reject(new Error('Stream must be a readable stream'))
         }
         if (err) { return reject(err) }
         try {
           const stream = sftp.createWriteStream(path)
-          stream.on('ready', function () {
+          stream.on('ready', () => {
             readableStream.pipe(stream)
           })
-          readableStream.on('error', function (err) {
+          readableStream.on('error', (err) => {
             reject(err)
           })
-          stream.on('close', function () {
+          stream.on('close', () => {
             resolve(true)
           })
-          stream.on('error', function (err) {
+          stream.on('error', (err) => {
             reject(err)
           })
         } catch (err) {
@@ -448,10 +448,10 @@ class SFTPClient {
    * @returns {Promise<Object>} Promise with readable stream
    */
   createReadStream(path, session) {
-    const createReadStreamCmd = function (resolve, reject, conn) {
-      return function (err, sftp) {
+    const createReadStreamCmd = (resolve, reject, conn) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.stat(path, function (err, stat) {
+        sftp.stat(path, (err, stat) => {
           if (err) { return reject(err) }
           let bytes = stat.size
           if (bytes > 0) {
@@ -459,20 +459,20 @@ class SFTPClient {
           }
           try {
             const stream = sftp.createReadStream(path, {start: 0, end: bytes})
-            stream.on('close', function () {
+            stream.on('close', () => {
               // if there is no session we need to clean the connection
               if (!session) {
                 conn.end()
                 conn.destroy()
               }
             })
-            stream.on('error', function () {
+            stream.on('error', () => {
               if (!session) {
                 conn.end()
                 conn.destroy()
               }
             })
-            stream.on('readable', function () {
+            stream.on('readable', () => {
               resolve(stream)
             })
           } catch (err) {
@@ -492,26 +492,26 @@ class SFTPClient {
    * @returns {Promise<Object>} Promise with writable stream
    */
   createWriteStream(path, session) {
-    const createWriteStreamCmd = function (resolve, reject, conn) {
-      return function (err, sftp) {
+    const createWriteStreamCmd = (resolve, reject, conn) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
         try {
           const stream = sftp.createWriteStream(path)
-          stream.on('close', function () {
+          stream.on('close', () => {
             // if there is no session we need to clean the connection
             if (!session) {
               conn.end()
               conn.destroy()
             }
           })
-          stream.on('error', function (err) {
+          stream.on('error', (err) => {
             if (!session) {
               conn.end()
               conn.destroy()
             }
             reject(err)
           })
-          stream.on('open', function () {
+          stream.on('open', () => {
             resolve(stream)
           })
         } catch (err) {
@@ -530,10 +530,10 @@ class SFTPClient {
    * @returns {Promise<string>} Promise with resolved path
    */
   realpath(path, session) {
-    const realpathCmd = function (resolve, reject) {
-      return function (err, sftp) {
+    const realpathCmd = (resolve, reject) => {
+      return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.realpath(path, function (err, rpath) {
+        sftp.realpath(path, (err, rpath) => {
           if (err) { return reject(err) }
           resolve(rpath)
         })
