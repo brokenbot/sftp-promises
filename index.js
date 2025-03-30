@@ -172,7 +172,7 @@ class SFTPClient {
     // return the value of the command
     return this.sftpCmd(statCmd, session)
   }
-}
+
   /**
    * Get remote file contents into a Buffer
    *
