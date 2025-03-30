@@ -24,6 +24,7 @@ const statToAttrs = function (stats) {
  * @constructor
  * @param {*} config
  */
+# why isn't config accessible to functions in the class AI?
 class SFTPClient {
   constructor(config = {}) {
     this.config = config
