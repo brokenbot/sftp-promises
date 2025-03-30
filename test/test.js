@@ -80,8 +80,8 @@ describe('putBuffer(buffer, remote)', function () {
   it('put(buffer, "/tmp/test.dat") should transfer buffer', function () {
     return sftp.putBuffer(buffer, '/tmp/test.dat').should.eventually.be.true
   })
-  it('put(buffer, "/unwritable") should transfer reject', function () {
-    return sftp.putBuffer(buffer, '/unwritable').should.be.rejected
+  it('put(buffer, "/root/unwritable") should transfer reject', function () {
+    return sftp.putBuffer(buffer, '/root/unwritable').should.be.rejected
   })
   it('put(buffer, "/tmp/zero.test") should put zero byte buffer', function () {
     return sftp.putBuffer(zbuffer, '/tmp/zero.test').should.eventually.be.true
@@ -108,8 +108,8 @@ describe('put(local, remote)', function () {
   it('should transfer local file to remote', function () {
     return sftp.put('test/fixtures/test.dat', '/tmp/test.dat').should.eventually.be.true
   })
-  it('put("test/fixtures/test.dat", "/unwritable") shoule reject', function () {
-    return sftp.put('test/fixtures/test.dat', '/unwritable').should.be.rejected
+  it('put("test/fixtures/test.dat", "/root/unwritable") should reject', function () {
+    return sftp.put('test/fixtures/test.dat', '/root/unwritable').should.be.rejected
   })
   it('put("/nonexistantfile", "/tmp/test.dat") should reject', function () {
     return sftp.put('/nonexistantfile', '/tmp/test.dat').should.be.rejected
@@ -120,8 +120,8 @@ describe('get(remote, local)', function () {
   it('should transfer remote file locally', function () {
     return sftp.get('/tmp/test.dat', '/tmp/transfertest.remove').should.eventually.be.true
   })
-  it('get("/tmp/test.dat", "/unwritable") should reject', function () {
-    return sftp.get('/tmp/test.dat', '/unwritable').should.be.rejected
+  it('get("/tmp/test.dat", "/root/unwritable") should reject', function () {
+    return sftp.get('/tmp/test.dat', '/root/unwritable').should.be.rejected
   })
   it('put("/nonexistantfile", "/tmp/test.dat") should reject', function () {
     return sftp.get('/nonexistantfile', '/tmp/test.dat').should.be.rejected
@@ -150,9 +150,9 @@ describe('putStream(path, readableStream)', function () {
   it('putStream("/tmp/test.dat", nonReadableStream) should reject', function () {
     return sftp.putStream('/tmp/test.dat', 'notastream').should.be.rejected
   })
-  it('putStream("/nonewritable/location", readStream) should reject', function () {
+  it('putStream("/root/cantwritehere", readStream) should reject', function () {
     var stream = fs.createReadStream('test/fixtures/test.dat')
-    return sftp.putStream('/cantwritehere', stream).should.be.rejected
+    return sftp.putStream('/root/cantwritehere', stream).should.be.rejected
   })
 })
 
@@ -171,8 +171,8 @@ describe('createWriteStream(path)', function () {
     var stream = fs.createReadStream('test/fixtures/test.dat')
     return sftp.createWriteStream('/tmp/test-stream.dat').then(function (ws) { stream.pipe(ws) }).should.be.fulfilled
   })
-  it('createWriteStream("/nonewritable/location") should reject', function () {
-    return sftp.createWriteStream('/cantwritehere').should.be.rejected
+  it('createWriteStream("/root/cantwritehere") should reject', function () {
+    return sftp.createWriteStream('/root/cantwritehere').should.be.rejected
   })
 })
 
@@ -183,8 +183,8 @@ describe('mv(source, dest)', function () {
   it('mv("/tmp/nonexistant.file","/tmp/test.dat") should fail', function () {
     return sftp.mv('/tmp/nonexistant.file', '/tmp/test.dat').should.be.rejected
   })
-  it('mv("/tmp/test.mv.dat", "/nonwritable/location" should fail', function () {
-    return sftp.mv('/tmp/test.mv.dat', '/cantwritehere').should.be.rejected
+  it('mv("/tmp/test.mv.dat", "/root/cantwritehere" should fail', function () {
+    return sftp.mv('/tmp/test.mv.dat', '/root/cantwritehere').should.be.rejected
   })
 })
 
@@ -237,8 +237,8 @@ describe('mkdir(path)', function () {
   it('mkdir("/tmp/testdir") should reslove', function () {
     return sftp.mkdir('/tmp/testdir').should.eventually.be.true
   })
-  it('mkdir("/nonewritable") should reject', function () {
-    return sftp.mkdir('/nowriteabledir').should.be.rejected
+  it('mkdir("/root/nowriteabledir") should reject', function () {
+    return sftp.mkdir('/root/nowriteabledir').should.be.rejected
   })
 })
 
