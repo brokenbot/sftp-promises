@@ -3,10 +3,10 @@ const { Client, SFTP_OPEN_MODE, SFTP_STATUS_CODE } = require('ssh2')
 const path = require('path')
 
 /**
- * Maximum file size for buffer operations (100MB)
+ * Default maximum file size for buffer operations (100MB)
  * @type {number}
  */
-const MAX_BUFFER_SIZE = 100 * 1024 * 1024
+const DEFAULT_MAX_BUFFER_SIZE = 100 * 1024 * 1024
 
 /**
  * Validates a path to prevent path traversal attacks
@@ -63,6 +63,9 @@ class SFTPClient {
     this.config = config
     this.MODES = SFTP_OPEN_MODE
     this.CODES = SFTP_STATUS_CODE
+    
+    // Set the maximum buffer size from config or use default
+    this.maxBufferSize = config.maxBufferSize || DEFAULT_MAX_BUFFER_SIZE
   }
 
   /**
@@ -235,9 +238,9 @@ class SFTPClient {
               let bytes = stat.size
               
               // Check file size limit to prevent DoS
-              if (bytes > MAX_BUFFER_SIZE) {
+              if (bytes > this.maxBufferSize) {
                 return sftp.close(handle, () => {
-                  reject(new Error(`File size (${bytes} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+                  reject(new Error(`File size (${bytes} bytes) exceeds maximum allowed size (${this.maxBufferSize} bytes)`))
                 })
               }
               
@@ -303,8 +306,8 @@ class SFTPClient {
           }
           
           // Check buffer size
-          if (buffer.length > MAX_BUFFER_SIZE) {
-            return reject(new Error(`Buffer size (${buffer.length} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+          if (buffer.length > this.maxBufferSize) {
+            return reject(new Error(`Buffer size (${buffer.length} bytes) exceeds maximum allowed size (${this.maxBufferSize} bytes)`))
           }
           
           const safePath = validatePath(location)
@@ -357,8 +360,8 @@ class SFTPClient {
             if (err) { return reject(err) }
             
             // Check file size limit if not explicitly disabled
-            if (!options.skipSizeValidation && stats.size > MAX_BUFFER_SIZE) {
-              return reject(new Error(`File size (${stats.size} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+            if (!options.skipSizeValidation && stats.size > this.maxBufferSize) {
+              return reject(new Error(`File size (${stats.size} bytes) exceeds maximum allowed size (${this.maxBufferSize} bytes)`))
             }
             
             sftp.fastGet(safeRemotePath, safeLocalPath, (err) => {
@@ -399,8 +402,8 @@ class SFTPClient {
             if (err) { return reject(err) }
             
             // Check file size limit if not explicitly disabled
-            if (!options.skipSizeValidation && stats.size > MAX_BUFFER_SIZE) {
-              return reject(new Error(`File size (${stats.size} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+            if (!options.skipSizeValidation && stats.size > this.maxBufferSize) {
+              return reject(new Error(`File size (${stats.size} bytes) exceeds maximum allowed size (${this.maxBufferSize} bytes)`))
             }
             
             const transferOptions = {
@@ -526,8 +529,8 @@ class SFTPClient {
             if (err) { return reject(err) }
             
             // Check file size limit if not explicitly disabled
-            if (!options.skipSizeValidation && stat.size > MAX_BUFFER_SIZE) {
-              return reject(new Error(`File size (${stat.size} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+            if (!options.skipSizeValidation && stat.size > this.maxBufferSize) {
+              return reject(new Error(`File size (${stat.size} bytes) exceeds maximum allowed size (${this.maxBufferSize} bytes)`))
             }
             
             let bytes = stat.size
@@ -606,11 +609,11 @@ class SFTPClient {
             streamSize += chunk.length
             
             // Check size limit during streaming if not explicitly disabled
-            if (!options.skipSizeValidation && streamSize > MAX_BUFFER_SIZE && !streamClosed) {
+            if (!options.skipSizeValidation && streamSize > this.maxBufferSize && !streamClosed) {
               streamClosed = true
               readableStream.destroy()
               stream.destroy()
-              reject(new Error(`Stream size (${streamSize} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+              reject(new Error(`Stream size (${streamSize} bytes) exceeds maximum allowed size (${this.maxBufferSize} bytes)`))
             }
           })
           
