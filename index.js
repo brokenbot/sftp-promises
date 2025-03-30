@@ -23,8 +23,10 @@ const statToAttrs = function (stats) {
  *
  * @constructor
  * @param {*} config
+ * 
+ * Note: config wasn't accessible to functions in the class because anonymous functions
+ * create their own 'this' context. This was fixed by using arrow functions.
  */
-# why isn't config accessible to functions in the class AI?
 class SFTPClient {
   constructor(config = {}) {
     this.config = config
