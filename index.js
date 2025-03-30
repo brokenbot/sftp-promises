@@ -1,5 +1,36 @@
 const { Buffer } = require('node:buffer')
 const { Client, SFTP_OPEN_MODE, SFTP_STATUS_CODE } = require('ssh2')
+const path = require('path')
+
+/**
+ * Maximum file size for buffer operations (100MB)
+ * @type {number}
+ */
+const MAX_BUFFER_SIZE = 100 * 1024 * 1024
+
+/**
+ * Validates a path to prevent path traversal attacks
+ * 
+ * @private
+ * @param {string} filePath - Path to validate
+ * @returns {string} Normalized path
+ * @throws {Error} If path contains invalid sequences
+ */
+const validatePath = function (filePath) {
+  if (!filePath || typeof filePath !== 'string') {
+    throw new Error('Path must be a non-empty string')
+  }
+  
+  // Normalize the path to remove any ../ sequences
+  const normalizedPath = path.normalize(filePath)
+  
+  // Check for suspicious path patterns
+  if (normalizedPath.includes('../') || normalizedPath.includes('..\\')) {
+    throw new Error('Path contains invalid traversal sequences')
+  }
+  
+  return normalizedPath
+}
 
 /**
  * Convert stats object to attributes object
@@ -181,37 +212,70 @@ class SFTPClient {
    * @param {string} location - path on remote filesystem to read
    * @param {ssh2.Client} [session] - existing ssh2 connection, optional
    * @returns {Promise<Buffer>} Promise with Buffer on resolve
+   * @throws {Error} If file size exceeds MAX_BUFFER_SIZE
    */
   getBuffer(location, session) {
     const getBufferCmd = (resolve, reject) => {
       return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.open(location, 'r', (err, handle) => {
-          if (err) { return reject(err) }
-          sftp.fstat(handle, (err, stat) => {
+        
+        try {
+          const safePath = validatePath(location)
+          
+          sftp.open(safePath, 'r', (err, handle) => {
             if (err) { return reject(err) }
-            let bytes = stat.size
-            const buffer = Buffer.alloc(bytes)
-            if (bytes === 0) {
-              return resolve(buffer)
-            }
-            buffer.fill(0)
-            const cb = (err, readBytes, offsetBuffer, position) => {
-              if (err) { return reject(err) }
-              position = position + readBytes
-              bytes = bytes - readBytes
-              if (bytes < 1) {
-                sftp.close(handle, (err) => {
+            
+            sftp.fstat(handle, (err, stat) => {
+              if (err) {
+                return sftp.close(handle, () => {
+                  reject(err)
+                })
+              }
+              
+              let bytes = stat.size
+              
+              // Check file size limit to prevent DoS
+              if (bytes > MAX_BUFFER_SIZE) {
+                return sftp.close(handle, () => {
+                  reject(new Error(`File size (${bytes} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+                })
+              }
+              
+              const buffer = Buffer.alloc(bytes)
+              if (bytes === 0) {
+                return sftp.close(handle, (err) => {
                   if (err) { return reject(err) }
                   resolve(buffer)
                 })
-              } else {
-                sftp.read(handle, buffer, position, bytes, position, cb)
               }
-            }
-            sftp.read(handle, buffer, 0, bytes, 0, cb)
+              
+              buffer.fill(0)
+              const cb = (err, readBytes, offsetBuffer, position) => {
+                if (err) {
+                  return sftp.close(handle, () => {
+                    reject(err)
+                  })
+                }
+                
+                position = position + readBytes
+                bytes = bytes - readBytes
+                
+                if (bytes < 1) {
+                  sftp.close(handle, (err) => {
+                    if (err) { return reject(err) }
+                    resolve(buffer)
+                  })
+                } else {
+                  sftp.read(handle, buffer, position, bytes, position, cb)
+                }
+              }
+              
+              sftp.read(handle, buffer, 0, bytes, 0, cb)
+            })
           })
-        })
+        } catch (error) {
+          reject(error)
+        }
       }
     }
     return this.sftpCmd(getBufferCmd, session)
@@ -223,22 +287,48 @@ class SFTPClient {
    * @param {Buffer} buffer - Buffer containing file contents
    * @param {string} location - path on remote filesystem to write
    * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+   * @param {number} [mode=0o644] - File permissions
    * @returns {Promise<boolean>} Promise with boolean true if transfer was successful
+   * @throws {Error} If buffer size exceeds MAX_BUFFER_SIZE
    */
-  putBuffer(buffer, location, session) {
+  putBuffer(buffer, location, session, mode = 0o644) {
     const putBufferCmd = (resolve, reject) => {
       return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.open(location, 'w', (err, handle) => {
-          if (err) { return reject(err) }
-          sftp.write(handle, buffer, 0, buffer.length, 0, (err) => {
+        
+        try {
+          // Validate input
+          if (!Buffer.isBuffer(buffer)) {
+            return reject(new Error('First parameter must be a Buffer'))
+          }
+          
+          // Check buffer size
+          if (buffer.length > MAX_BUFFER_SIZE) {
+            return reject(new Error(`Buffer size (${buffer.length} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+          }
+          
+          const safePath = validatePath(location)
+          
+          // Use 'wx' mode to fail if file exists, preventing accidental overwrites
+          sftp.open(safePath, 'w', mode, (err, handle) => {
             if (err) { return reject(err) }
-            sftp.close(handle, (err) => {
-              if (err) { return reject(err) }
-              resolve(true)
+            
+            sftp.write(handle, buffer, 0, buffer.length, 0, (err) => {
+              if (err) {
+                return sftp.close(handle, () => {
+                  reject(err)
+                })
+              }
+              
+              sftp.close(handle, (err) => {
+                if (err) { return reject(err) }
+                resolve(true)
+              })
             })
           })
-        })
+        } catch (error) {
+          reject(error)
+        }
       }
     }
     return this.sftpCmd(putBufferCmd, session)
@@ -250,16 +340,35 @@ class SFTPClient {
    * @param {string} remote - path to remote file
    * @param {string} local - destination path on local filesystem
    * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+   * @param {Object} [options] - Additional options for the transfer
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
-  get(remote, local, session) {
+  get(remote, local, session, options = {}) {
     const getCmd = (resolve, reject) => {
       return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.fastGet(remote, local, (err) => {
-          if (err) { return reject(err) }
-          resolve(true)
-        })
+        
+        try {
+          const safeRemotePath = validatePath(remote)
+          const safeLocalPath = validatePath(local)
+          
+          // Check file size before transfer
+          sftp.stat(safeRemotePath, (err, stats) => {
+            if (err) { return reject(err) }
+            
+            // Check file size limit if not explicitly disabled
+            if (!options.skipSizeValidation && stats.size > MAX_BUFFER_SIZE) {
+              return reject(new Error(`File size (${stats.size} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+            }
+            
+            sftp.fastGet(safeRemotePath, safeLocalPath, (err) => {
+              if (err) { return reject(err) }
+              resolve(true)
+            })
+          })
+        } catch (error) {
+          reject(error)
+        }
       }
     }
     return this.sftpCmd(getCmd, session)
@@ -271,16 +380,41 @@ class SFTPClient {
    * @param {string} local - path to local file
    * @param {string} remote - destination path on remote filesystem
    * @param {ssh2.Client} [session] - existing ssh2 connection, optional
+   * @param {Object} [options] - Additional options for the transfer
+   * @param {number} [options.mode=0o644] - File permissions
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
-  put(local, remote, session) {
+  put(local, remote, session, options = {}) {
     const putCmd = (resolve, reject) => {
       return (err, sftp) => {
         if (err) { return reject(err) }
-        sftp.fastPut(local, remote, (err) => {
-          if (err) { return reject(err) }
-          resolve(true)
-        })
+        
+        try {
+          const safeLocalPath = validatePath(local)
+          const safeRemotePath = validatePath(remote)
+          
+          // Check if file exists and get its size
+          const fs = require('fs')
+          fs.stat(safeLocalPath, (err, stats) => {
+            if (err) { return reject(err) }
+            
+            // Check file size limit if not explicitly disabled
+            if (!options.skipSizeValidation && stats.size > MAX_BUFFER_SIZE) {
+              return reject(new Error(`File size (${stats.size} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+            }
+            
+            const transferOptions = {
+              mode: options.mode || 0o644
+            }
+            
+            sftp.fastPut(safeLocalPath, safeRemotePath, transferOptions, (err) => {
+              if (err) { return reject(err) }
+              resolve(true)
+            })
+          })
+        } catch (error) {
+          reject(error)
+        }
       }
     }
     return this.sftpCmd(putCmd, session)
@@ -373,34 +507,69 @@ class SFTPClient {
    * @param {string} path - remote file path
    * @param {Object} writableStream - writable stream to pipe read data to
    * @param {ssh2.Client} [session] - existing ssh2 connection
+   * @param {Object} [options] - Additional options
+   * @param {boolean} [options.skipSizeValidation=false] - Skip file size validation
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
-  getStream(path, writableStream, session) {
+  getStream(path, writableStream, session, options = {}) {
     const getStreamCmd = (resolve, reject) => {
       return (err, sftp) => {
-        if (!writableStream.writable) {
+        if (!writableStream || !writableStream.writable) {
           return reject(new Error('Stream must be a writable stream'))
         }
         if (err) { return reject(err) }
-        sftp.stat(path, (err, stat) => {
-          if (err) { return reject(err) }
-          let bytes = stat.size
-          if (bytes > 0) {
-            bytes -= 1
-          }
-          try {
-            const stream = sftp.createReadStream(path, {start: 0, end: bytes})
-            stream.pipe(writableStream)
-            stream.on('end', () => {
-              resolve(true)
-            })
-            stream.on('error', (err) => {
-              reject(err)
-            })
-          } catch (err) {
-            return reject(err)
-          }
-        })
+        
+        try {
+          const safePath = validatePath(path)
+          
+          sftp.stat(safePath, (err, stat) => {
+            if (err) { return reject(err) }
+            
+            // Check file size limit if not explicitly disabled
+            if (!options.skipSizeValidation && stat.size > MAX_BUFFER_SIZE) {
+              return reject(new Error(`File size (${stat.size} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+            }
+            
+            let bytes = stat.size
+            if (bytes > 0) {
+              bytes -= 1
+            }
+            
+            try {
+              const stream = sftp.createReadStream(safePath, {start: 0, end: bytes})
+              let streamClosed = false
+              
+              // Handle errors on the destination stream
+              writableStream.on('error', (err) => {
+                if (!streamClosed) {
+                  streamClosed = true
+                  stream.destroy()
+                  reject(err)
+                }
+              })
+              
+              stream.on('error', (err) => {
+                if (!streamClosed) {
+                  streamClosed = true
+                  reject(err)
+                }
+              })
+              
+              stream.on('end', () => {
+                if (!streamClosed) {
+                  streamClosed = true
+                  resolve(true)
+                }
+              })
+              
+              stream.pipe(writableStream)
+            } catch (err) {
+              return reject(err)
+            }
+          })
+        } catch (error) {
+          reject(error)
+        }
       }
     }
     return this.sftpCmd(getStreamCmd, session)
@@ -412,28 +581,64 @@ class SFTPClient {
    * @param {string} path - remote file path
    * @param {Object} readableStream - readable stream to pipe data from
    * @param {ssh2.Client} [session] - existing ssh2 connection
+   * @param {Object} [options] - Additional options
+   * @param {number} [options.mode=0o644] - File permissions
    * @returns {Promise<boolean>} Promise with boolean true if successful
    */
-  putStream(path, readableStream, session) {
+  putStream(path, readableStream, session, options = {}) {
     const putStreamCmd = (resolve, reject) => {
       return (err, sftp) => {
-        if (!readableStream.readable) {
+        if (!readableStream || !readableStream.readable) {
           return reject(new Error('Stream must be a readable stream'))
         }
         if (err) { return reject(err) }
+        
         try {
-          const stream = sftp.createWriteStream(path)
+          const safePath = validatePath(path)
+          let streamSize = 0
+          let streamClosed = false
+          
+          const mode = options.mode || 0o644
+          const stream = sftp.createWriteStream(safePath, { mode })
+          
+          // Track data size to enforce limits
+          readableStream.on('data', (chunk) => {
+            streamSize += chunk.length
+            
+            // Check size limit during streaming if not explicitly disabled
+            if (!options.skipSizeValidation && streamSize > MAX_BUFFER_SIZE && !streamClosed) {
+              streamClosed = true
+              readableStream.destroy()
+              stream.destroy()
+              reject(new Error(`Stream size (${streamSize} bytes) exceeds maximum allowed size (${MAX_BUFFER_SIZE} bytes)`))
+            }
+          })
+          
           stream.on('ready', () => {
             readableStream.pipe(stream)
           })
+          
           readableStream.on('error', (err) => {
-            reject(err)
+            if (!streamClosed) {
+              streamClosed = true
+              stream.destroy()
+              reject(err)
+            }
           })
+          
           stream.on('close', () => {
-            resolve(true)
+            if (!streamClosed) {
+              streamClosed = true
+              resolve(true)
+            }
           })
+          
           stream.on('error', (err) => {
-            reject(err)
+            if (!streamClosed) {
+              streamClosed = true
+              readableStream.destroy()
+              reject(err)
+            }
           })
         } catch (err) {
           return reject(err)
