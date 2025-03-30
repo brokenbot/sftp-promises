@@ -84,6 +84,7 @@ class SFTPClient {
     // handle the persistent connection regardless of how promise fairs
     }).then(resolved, rejected)
   }
+  
   /**
    * Creates a new ssh2 session
    *
