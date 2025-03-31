@@ -40,15 +40,15 @@ describe('SFTPClient()', function () {
     Client.config.should.equal(config)
   })
   it('SFTPClient() should return SFTPClient instance', function () {
-    var Client = SFTPClient()
+    var Client = new SFTPClient()
     return Client instanceof SFTPClient
   })
   it('stat("./") with invalid login should fail', function () {
-    var Client = SFTPClient(invalidLogin)
+    var Client = new SFTPClient(invalidLogin)
     return Client.stat('./').should.be.rejected
   }).timeout(10000)
   it('stat("./") with invalid config should fail', function () {
-    var Client = SFTPClient()
+    var Client = new SFTPClient()
     return Client.stat('./').should.be.rejected
   })
 })

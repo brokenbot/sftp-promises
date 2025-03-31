@@ -38,26 +38,3 @@ jobs:
     
     - name: Check Coverage
       run: npm run check-coverage
-    
-
-  coveralls:
-    name: Coveralls
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - name: Setup SSH server for tests
-      run: |
-        sudo apt-get update && sudo apt-get install -y openssh-server
-        sudo service ssh start
-        sudo useradd -m -p $(openssl passwd -1 vagrant) vagrant
-        
-    - name: npm install
-      run: |
-        npm install
-        npm run coverage
-        npm run report-coverage
-
-    - name: Coveralls
-      uses: coverallsapp/github-action@v2
