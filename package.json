@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --exit",
-    "coverage": "istanbul cover _mocha -- --exit -R spec",
-    "check-coverage": "istanbul check-coverage --statements 85 --branches 70 --functions 90 --lines 90",
+    "coverage": "nyc --reporter=lcov --reporter=text mocha --exit",
+    "check-coverage": "nyc check-coverage --statements 85 --branches 70 --functions 90 --lines 90",
     "report-coverage": "cat ./coverage/lcov.info | coveralls"
   },
   "repository": {
@@ -26,19 +26,26 @@
   },
   "homepage": "https://github.com/brokenbot/sftp-promises#readme",
   "dependencies": {
-    "ssh2": "^1.4.0",
+    "ssh2": "^1.15.0",
     "ssh2-streams": "^0.4.2"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
+    "chai": "^4.3.7",
     "chai-as-promised": "^7.1.1",
-    "coveralls": "^3.0.3",
-    "istanbul": "^0.4.5",
-    "jsdoc": "^3.6.4",
-    "mocha": "^9.1.2",
-    "standard": "^16.0.4"
+    "coveralls": "^3.1.1",
+    "nyc": "^15.1.0",
+    "jsdoc": "^4.0.2",
+    "mocha": "^10.2.0",
+    "standard": "^17.0.0",
+    "sinon": "^15.0.1",
+    "proxyquire": "^2.1.3"
+  },
+  "overrides": {
+    "form-data": "2.5.5",
+    "qs": "6.14.1",
+    "tough-cookie": "4.1.3"
   },
   "engines": {
-    "node": ">=4.5.0"
+    "node": ">=18.0.0"
   }
 }
