@@ -30,6 +30,10 @@ var sftp = new SFTPClient(config)
 var buffer = fs.readFileSync('test/fixtures/test.dat')
 var zbuffer = fs.readFileSync('test/fixtures/zero.test')
 
+if (!process.env.SFTP_INTEGRATION_TESTS) {
+  console.log('Skipping integration tests. Set SFTP_INTEGRATION_TESTS to run them.')
+} else {
+
 describe('SFTPClient()', function () {
   it('new SFTPClient(config) should return SFTPClient', function () {
     var Client = new SFTPClient(config)
@@ -262,3 +266,5 @@ describe('realpath(path)', function () {
     return sftp.pwd().should.be.fulfilled
   })
 })
+
+}
