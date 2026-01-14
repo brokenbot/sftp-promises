@@ -342,18 +342,62 @@ SFTPClient.prototype.rmdir = function rmdir (path, session) {
  *  makes a directory
  *
  * @param {string} path - remote directory to be created
+ * @param {boolean} [recursive] - optional, if true create directories recursively
  * @param {ssh2.Client} [session] - existing ssh2 connection, optional
  */
-SFTPClient.prototype.mkdir = function mkdir (path, session) {
+SFTPClient.prototype.mkdir = function mkdir (path, recursive, session) {
+  var doRecursive = false
+  if (typeof recursive === 'boolean') {
+    doRecursive = recursive
+  } else {
+    session = recursive
+    recursive = undefined
+  }
+
   var mkdirCmd = function (resolve, reject) {
     return function (err, sftp) {
       if (err) {
         return reject(err)
       }
-      sftp.mkdir(path, function (err) {
-        if (err) { return reject(err) }
-        return resolve(true)
-      })
+      if (!doRecursive) {
+        sftp.mkdir(path, function (err) {
+          if (err) { return reject(err) }
+          return resolve(true)
+        })
+      } else {
+        var pathModule = require('path')
+        var dirs = []
+        var curr = path
+        while (curr && curr !== '.' && curr !== '/') {
+          dirs.push(curr)
+          curr = pathModule.posix.dirname(curr)
+        }
+        dirs.reverse()
+
+        var mkdirP = function (index) {
+          if (index >= dirs.length) {
+            return resolve(true)
+          }
+          var dir = dirs[index]
+          sftp.mkdir(dir, function (err) {
+            if (err) {
+              sftp.stat(dir, function (statErr, stat) {
+                if (statErr) {
+                  return reject(err)
+                }
+                if (stat.isDirectory()) {
+                  mkdirP(index + 1)
+                } else {
+                  return reject(err)
+                }
+              })
+            } else {
+              mkdirP(index + 1)
+            }
+          })
+        }
+        mkdirP(0)
+      }
     }
   }
   return this.sftpCmd(mkdirCmd, session)
